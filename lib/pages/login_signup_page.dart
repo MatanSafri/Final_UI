@@ -32,13 +32,13 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
         body: Stack(
           children: <Widget>[
             _showBody(),
-            //_showCircularProgress(),
+            _showCircularProgress(),
           ],
         ));
   }
 
   Widget _showCircularProgress() {
-    if (_isLoading) {
+    if (_isLoading != null && _isLoading) {
       return Center(child: CircularProgressIndicator());
     }
     return Container(
@@ -156,6 +156,10 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
         });
       }
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Widget _showSecondaryButton() {
