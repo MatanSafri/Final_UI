@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:iot_ui/services/authentication.dart';
 
 class LoginSignUpPage extends StatefulWidget {
+  LoginSignUpPage({this.auth});
+
+  final BaseAuth auth;
   @override
   State<StatefulWidget> createState() => new _LoginSignUpPageState();
 }
@@ -113,8 +116,46 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
         ));
   }
 
+  bool _validateAndSave() {
+    final form = _formKey.currentState;
+    if (form.validate()) {
+      form.save();
+      return true;
+    }
+    return false;
+  }
+
   void _validateAndSubmit() async {
-    _formKey.currentState.validate();
+    setState(() {
+      _errorMessage = "";
+      _isLoading = true;
+    });
+
+    if (_validateAndSave()) {
+      String userId = "";
+      try {
+        if (_formMode == FormMode.LOGIN) {
+          userId = await widget.auth.signIn(_email, _password);
+          print('Signed in: $userId');
+        } else {
+          print('before signup!\n');
+          userId = await widget.auth.signUp(_email, _password);
+          print('Signed up user: $userId');
+        }
+        if (userId != null && userId.length > 0) {
+          //widget.onSignedIn();
+        }
+      } catch (e) {
+        print('Error: $e');
+        setState(() {
+          _isLoading = false;
+          if (_isIos) {
+            _errorMessage = e.details;
+          } else
+            _errorMessage = e.message;
+        });
+      }
+    }
   }
 
   Widget _showSecondaryButton() {
@@ -169,6 +210,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   void _changeFormToSignUp() {
     _formKey.currentState.reset();
+    _formKey.currentState.reset();
     _errorMessage = "";
     setState(() {
       _formMode = FormMode.SIGNUP;
@@ -176,6 +218,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   void _changeFormToLogin() {
+    _formKey.currentState.reset();
     _formKey.currentState.reset();
     _errorMessage = "";
     setState(() {
