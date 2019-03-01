@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:iot_ui/services/authentication.dart';
 
 class LoginSignUpPage extends StatefulWidget {
-  LoginSignUpPage({this.auth});
+  LoginSignUpPage({this.auth, this.onSignedIn});
 
   final BaseAuth auth;
+  final VoidCallback onSignedIn;
   @override
   State<StatefulWidget> createState() => new _LoginSignUpPageState();
 }
@@ -143,7 +144,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
           print('Signed up user: $userId');
         }
         if (userId != null && userId.length > 0) {
-          //widget.onSignedIn();
+          widget.onSignedIn();
         }
       } catch (e) {
         print('Error: $e');
