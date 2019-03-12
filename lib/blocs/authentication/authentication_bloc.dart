@@ -76,7 +76,8 @@ class AuthenticationBloc
         String userId = currentState.isLoginPage
             ? await auth.signIn(event.email, event.password)
             : await auth.signUp(event.email, event.password);
-        yield AuthenticationState.authenticated(userId);
+        yield AuthenticationState.authenticated(
+            userId, currentState.isLoginPage);
       } catch (e) {
         // String errorMessage;
         //  if (_isIos) {

@@ -23,10 +23,10 @@ class AuthenticationState extends BlocState {
     );
   }
 
-  factory AuthenticationState.authenticated(String userName) {
+  factory AuthenticationState.authenticated(String userName, bool isLoginPage) {
     return AuthenticationState(
       isAuthenticated: true,
-      isLoginPage: false,
+      isLoginPage: isLoginPage,
       userName: userName,
     );
   }
