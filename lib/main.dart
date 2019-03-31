@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iot_ui/blocs/authentication/authentication_bloc.dart';
 import 'package:iot_ui/blocs/bloc_helpers/bloc_provider.dart';
+import 'package:iot_ui/pages/add_data_page.dart';
 import 'package:iot_ui/pages/decision_page.dart';
 import 'package:iot_ui/pages/home_page.dart';
 import 'package:iot_ui/pages/initialization_page.dart';
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.blue,
           ),
-          home: InitializationPage(),
+          home: InitializationPage(), //AddDataPage(),
           routes: {
             '/decision': (BuildContext context) => DecisionPage(),
             '/homepage': (BuildContext context) => HomePage(),
