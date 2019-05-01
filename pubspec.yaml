@@ -21,7 +21,8 @@ dependencies:
   cupertino_icons: ^0.1.2
   #firebase_auth: 0.7.0
   firebase_auth: ^0.8.3
-  cloud_firestore: ^0.9.7+2
+  cloud_firestore: ^0.9.13+1
+  flutter_multiselect: ^0.2.0
   rxdart: ^0.21.0
   gcloud: ^0.6.0+2
   googleapis_auth: ^0.2.7
