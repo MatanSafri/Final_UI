@@ -24,9 +24,10 @@ class DataDisplayBloc
   }
 
   @override
-  void dispose() {
-    _systemNames?.close();
-    _systemsData?.close();
+  void dispose() async {
+    await _currDataStreamSubscription?.cancel();
+    await _systemNames?.close();
+    await _systemsData?.close();
   }
 
   //final BehaviorSubject<List<String>>  _systemNames = BehaviorSubject<List<String>>();
@@ -47,7 +48,7 @@ class DataDisplayBloc
       DataDisplayEvent event, DataDisplayState currentState) async* {
     if (event is InitDataDisplay) {
     } else if (event is ChangeSystemsSelection) {
-      // clean up from preStream<List<Map<String, dynamic>>> query
+      // clean up from prevStream query
       await _currDataStreamSubscription?.cancel();
       await _systemsData?.close();
 
@@ -59,13 +60,10 @@ class DataDisplayBloc
 
       _systemsData = PublishSubject<List<Map<String, dynamic>>>();
 
-      //var streams = List<Stream<List<Map<String, dynamic>>>>();
-
       // transform the stream
       StreamTransformer trans = StreamTransformer<QuerySnapshot,
           List<Map<String, dynamic>>>.fromHandlers(handleData: handleData);
       event.newSystems.forEach((systemName) {
-        //streams.add(DAL.getDataCollection(systemName).transform(trans));
         _dataStreams.putIfAbsent(systemName,
             () => DAL.getDataCollection(systemName).transform(trans));
       });
@@ -77,12 +75,9 @@ class DataDisplayBloc
           ..addAll(curr);
       });
 
-      // TODO: close listener
       _currDataStreamSubscription = combinedStream.listen((onData) {
         _systemsData.sink.add(onData);
       });
-
-      //_systemsData.addStream(combinedStream);
 
       yield DataDisplayState.systemsSelected(event.newSystems);
     }

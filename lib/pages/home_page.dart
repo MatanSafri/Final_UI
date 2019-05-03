@@ -35,14 +35,6 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  List<Widget> _displayData(QuerySnapshot snapshot) {
-    var dataWidgets = <Widget>[];
-    DAL.getSystemDataFromQuery(snapshot).forEach((dataEntry) {
-      dataWidgets.add(Text(dataEntry.toString()));
-    });
-    return dataWidgets;
-  }
-
   DataDisplayBloc _dataDisplayBloc;
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
   @override
@@ -61,7 +53,7 @@ class _HomePageState extends State<HomePage> {
           if (snapshot.hasError)
             return new Text('${snapshot.error}');
           else if (snapshot.connectionState == ConnectionState.waiting)
-            return Container(); //PendingAction();
+            return PendingAction(); //Container();
 
           List<String> systemsNames = List<String>();
           List<Map> dataSource = List<Map>();
