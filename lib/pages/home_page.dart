@@ -35,47 +35,6 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Widget _showBody(BuildContext context, DataDisplayState state) {
-    var children = <Widget>[];
-
-    children.add(MaterialButton(
-        elevation: 5.0,
-        minWidth: 200.0,
-        height: 42.0,
-        color: Colors.blue,
-        child: Text("Check",
-            style: new TextStyle(fontSize: 20.0, color: Colors.white)),
-        onPressed: () {
-          //_dataDisplayBloc.emitEvent(InitDataDispayEvent());
-          //await for (var data in DAL.getSystemsNames()) print("$data\n");
-          //_showMultiSelect(context);
-        }));
-
-    // List<Map> dataSource = List<Map>();
-
-    // state.systemNames.forEach((systemName) {
-    //   int index = 1;
-    //   dataSource.add({"display": systemName, "value": index++});
-    // });
-
-    // children.add(MultiSelect(
-    //     autovalidate: true,
-    //     titleText: "Select system",
-    //     validator: (value) {
-    //       if (value == null) {
-    //         return 'Please select one or more option(s)';
-    //       }
-    //     },
-    //     dataSource: dataSource,
-    //     textField: 'display',
-    //     valueField: 'value',
-    //     filterable: true,
-    //     required: true,
-    //     onSaved: (value) {
-    //       print("bala\n");
-    //     }));
-  }
-
   List<Widget> _displayData(QuerySnapshot snapshot) {
     var dataWidgets = <Widget>[];
     DAL.getSystemDataFromQuery(snapshot).forEach((dataEntry) {
@@ -152,21 +111,34 @@ class _HomePageState extends State<HomePage> {
           form.save();
         }));
 
-    children.add(StreamBuilder<QuerySnapshot>(
-        stream: _dataDisplayBloc.systemsDataStream,
-        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          print("data stream is on\n");
-          if (snapshot.hasError)
-            return Text('${snapshot.error}');
-          else if (snapshot.connectionState == ConnectionState.waiting)
-            return Container(); //PendingAction();
-          print("data stream got new data\n");
-          print("${snapshot.data.documents.length}\n");
-          DAL.getSystemDataFromQuery(snapshot.data).forEach((d) {
-            print("$d");
-          });
-          return Text(snapshot.data.documents.first.data
-              .toString()); //ListView(children: _displayData(snapshot.data)); //Container();
+    children.add(BlocEventStateBuilder<DataDisplayEvent, DataDisplayState>(
+        bloc: _dataDisplayBloc,
+        builder: (BuildContext context, DataDisplayState state) {
+          return StreamBuilder<QuerySnapshot>(
+              stream: _dataDisplayBloc.systemsDataStream,
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.hasError)
+                  return Text('${snapshot.error}');
+                else if (snapshot.connectionState == ConnectionState.waiting)
+                  return Container(); //PendingAction();
+                if (!snapshot.hasData) return Container();
+                print(
+                    "this snapshot has ${snapshot.data.documents.length} items \n");
+                DAL.getSystemDataFromQuery(snapshot.data).forEach((d) {
+                  print("$d");
+                });
+                return Container(
+                    child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: snapshot.data.documents.length,
+                        itemBuilder: (BuildContext context, index) {
+                          var currentDoc = snapshot.data.documents[index].data;
+                          return ExpansionTile(
+                            title: Text(currentDoc.toString()),
+                          );
+                        }));
+              });
         }));
 
     return WillPopScope(

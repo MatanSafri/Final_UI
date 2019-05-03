@@ -7,12 +7,16 @@ class DataDisplayState extends BlocState {
   final List<String> systemNames;
 
   DataDisplayState(
-      {this.isLoading: false, @required this.data, @required this.systemNames});
+      {this.isLoading: false, this.data, @required this.systemNames});
 
   factory DataDisplayState.loadingData(List<String> systemNames) {
     return DataDisplayState(
         isLoading: false,
         data: Map<String, dynamic>(),
         systemNames: systemNames);
+  }
+
+  factory DataDisplayState.systemsSelected(List<String> systemNames) {
+    return DataDisplayState(systemNames: systemNames);
   }
 }

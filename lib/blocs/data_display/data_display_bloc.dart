@@ -1,3 +1,4 @@
+import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iot_ui/blocs/bloc_helpers/bloc_event_state.dart';
 import 'package:iot_ui/blocs/data_display/data_display_event.dart';
@@ -44,10 +45,38 @@ class DataDisplayBloc
     } else if (event is ChangeSystemsSelection) {
       // close the prev listener
       //_systemsData.close();
-      // _systemsData = BehaviorSubject<QuerySnapshot>();
+      //_systemsData = BehaviorSubject<QuerySnapshot>();
+
+      // List<Stream<QuerySnapshot>> streams = List<Stream<QuerySnapshot>>();
+
       // event.newSystems.forEach((systemName) {
-      _systemsData.addStream(DAL.getDataCollection(event.newSystems.first));
+      //   streams.add(DAL.getDataCollection(systemName));
       // });
+
+      //_systemsData.addStream(Observable.merge(streams));
+      // await _systemsData.sink?.close();
+      // await _systemsData.close();
+
+      // TODO: handle closing the prev streams
+      // TODO: optimaze by using lastState dont add existing streams - maybe need to save originals streams
+
+      // margeing all the data streams of the systems to one and add it to _systemsData
+      //await _systemsData.drain();
+
+      _systemsData = BehaviorSubject<QuerySnapshot>();
+      print("stream: ${event.newSystems.toString()}\n");
+      // _systemsData.addStream(Observable.merge(event.newSystems
+      //     .map((systemName) => DAL.getDataCollection(systemName))));
+
+      List<Stream<QuerySnapshot>> streams = List<Stream<QuerySnapshot>>();
+
+      event.newSystems.forEach((systemName) {
+        streams.add(DAL.getDataCollection(systemName));
+      });
+
+      //_systemsData.addStream(x);
+
+      yield DataDisplayState.systemsSelected(currentState.systemNames);
     }
   }
 }
