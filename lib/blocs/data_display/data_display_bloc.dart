@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iot_ui/blocs/bloc_helpers/bloc_event_state.dart';
@@ -27,56 +29,49 @@ class DataDisplayBloc
       BehaviorSubject<QuerySnapshot>();
   Stream<QuerySnapshot> get systemNamesStream => _systemNames.stream;
 
-  BehaviorSubject<QuerySnapshot> _systemsData =
-      BehaviorSubject<QuerySnapshot>();
-  Stream<QuerySnapshot> get systemsDataStream => _systemsData.stream;
+  BehaviorSubject<List<Map<String, dynamic>>> _systemsData =
+      BehaviorSubject<List<Map<String, dynamic>>>();
+  Stream<List<Map<String, dynamic>>> get systemsDataStream =>
+      _systemsData.stream;
 
   @override
   Stream<DataDisplayState> eventHandler(
       DataDisplayEvent event, DataDisplayState currentState) async* {
     if (event is InitDataDisplay) {
-      // inform that we are loading
-      //yield DataDisplayState.loadingSystems();
-      //_allSystemNames.add(event.newSystem);
-      //_systemNames.sink.add();
-
-      // Getting all the systems
-      //var allSystems = await (DAL.getSystemsNames().toList());
     } else if (event is ChangeSystemsSelection) {
-      // close the prev listener
-      //_systemsData.close();
-      //_systemsData = BehaviorSubject<QuerySnapshot>();
+      _systemsData = BehaviorSubject<List<Map<String, dynamic>>>();
 
-      // List<Stream<QuerySnapshot>> streams = List<Stream<QuerySnapshot>>();
+      var streams = List<Stream<List<Map<String, dynamic>>>>();
 
-      // event.newSystems.forEach((systemName) {
-      //   streams.add(DAL.getDataCollection(systemName));
-      // });
-
-      //_systemsData.addStream(Observable.merge(streams));
-      // await _systemsData.sink?.close();
-      // await _systemsData.close();
-
-      // TODO: handle closing the prev streams
-      // TODO: optimaze by using lastState dont add existing streams - maybe need to save originals streams
-
-      // margeing all the data streams of the systems to one and add it to _systemsData
-      //await _systemsData.drain();
-
-      _systemsData = BehaviorSubject<QuerySnapshot>();
-      print("stream: ${event.newSystems.toString()}\n");
-      // _systemsData.addStream(Observable.merge(event.newSystems
-      //     .map((systemName) => DAL.getDataCollection(systemName))));
-
-      List<Stream<QuerySnapshot>> streams = List<Stream<QuerySnapshot>>();
-
+      // transform the stream
+      StreamTransformer trans = new StreamTransformer<QuerySnapshot,
+          List<Map<String, dynamic>>>.fromHandlers(handleData: handleData);
       event.newSystems.forEach((systemName) {
-        streams.add(DAL.getDataCollection(systemName));
+        streams.add(DAL.getDataCollection(systemName).transform(trans));
       });
 
-      //_systemsData.addStream(x);
+      // need scan beacuse when stream merged  streambuilder widget build only at the second stream
+      var combinedStream = Observable.merge(streams)
+          .scan<List<Map<String, dynamic>>>((acc, curr, i) {
+        return acc ?? <Map<String, dynamic>>[]
+          ..addAll(curr);
+      });
+
+      combinedStream.listen((onData) {
+        _systemsData.sink.add(onData);
+      });
+
+      //_systemsData.addStream(combinedStream);
 
       yield DataDisplayState.systemsSelected(currentState.systemNames);
     }
+  }
+
+  void handleData(data, EventSink sink) {
+    var items = List<Map<String, dynamic>>();
+    data.documents.forEach((doc) {
+      items.add(doc.data);
+    });
+    sink.add(items);
   }
 }

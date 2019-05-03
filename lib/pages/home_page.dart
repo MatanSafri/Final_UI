@@ -114,26 +114,50 @@ class _HomePageState extends State<HomePage> {
     children.add(BlocEventStateBuilder<DataDisplayEvent, DataDisplayState>(
         bloc: _dataDisplayBloc,
         builder: (BuildContext context, DataDisplayState state) {
-          return StreamBuilder<QuerySnapshot>(
+          // return StreamBuilder<QuerySnapshot>(
+          //     stream: _dataDisplayBloc.systemsDataStream,
+          //     builder: (BuildContext context,
+          //         AsyncSnapshot<QuerySnapshot> snapshot) {
+          //       if (snapshot.hasError)
+          //         return Text('${snapshot.error}');
+          //       else if (snapshot.connectionState == ConnectionState.waiting)
+          //         return Container(); //PendingAction();
+          //       if (!snapshot.hasData) return Container();
+          //       print(
+          //           "this snapshot has ${snapshot.data.documents.length} items \n");
+          //       DAL.getSystemDataFromQuery(snapshot.data).forEach((d) {
+          //         print("$d");
+          //       });
+          //       return Container(
+          //           child: ListView.builder(
+          //               shrinkWrap: true,
+          //               itemCount: snapshot.data.documents.length,
+          //               itemBuilder: (BuildContext context, index) {
+          //                 var currentDoc = snapshot.data.documents[index].data;
+          //                 return ExpansionTile(
+          //                   title: Text(currentDoc.toString()),
+          //                 );
+          //               }));
+          //     });
+          return StreamBuilder<List<Map<String, dynamic>>>(
               stream: _dataDisplayBloc.systemsDataStream,
               builder: (BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                  AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                 if (snapshot.hasError)
                   return Text('${snapshot.error}');
                 else if (snapshot.connectionState == ConnectionState.waiting)
                   return Container(); //PendingAction();
                 if (!snapshot.hasData) return Container();
-                print(
-                    "this snapshot has ${snapshot.data.documents.length} items \n");
-                DAL.getSystemDataFromQuery(snapshot.data).forEach((d) {
-                  print("$d");
+                snapshot.data.forEach((item) {
+                  print("${item.toString()}\n");
                 });
+                //print("${snapshot.data.toString()}\n");
                 return Container(
                     child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: snapshot.data.documents.length,
+                        itemCount: snapshot.data.length,
                         itemBuilder: (BuildContext context, index) {
-                          var currentDoc = snapshot.data.documents[index].data;
+                          var currentDoc = snapshot.data[index];
                           return ExpansionTile(
                             title: Text(currentDoc.toString()),
                           );
