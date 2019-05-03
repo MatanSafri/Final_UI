@@ -55,9 +55,9 @@ class _HomePageState extends State<HomePage> {
     //       return _showBody(context, state);
     //     }));
 
-    children.add(StreamBuilder<QuerySnapshot>(
+    children.add(StreamBuilder<List<String>>(
         stream: _dataDisplayBloc.systemNamesStream,
-        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
           if (snapshot.hasError)
             return new Text('${snapshot.error}');
           else if (snapshot.connectionState == ConnectionState.waiting)
@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
           List<String> systemsNames = List<String>();
           List<Map> dataSource = List<Map>();
           if (snapshot.hasData) {
-            systemsNames.addAll(DAL.getSystemNamesFromQuery(snapshot.data));
+            systemsNames.addAll(snapshot.data);
             int index = 0;
             systemsNames.forEach((systemName) {
               dataSource.add({"display": systemName, "value": index++});

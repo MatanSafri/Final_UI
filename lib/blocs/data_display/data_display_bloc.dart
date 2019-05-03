@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,7 +16,11 @@ class DataDisplayBloc
     // DAL.onSystemNameDataArrived((systemName) {
     //   emitEvent(SystemNameArrivedFromDb(newSystem: systemName));
     // });
-    _systemNames.addStream(DAL.getSystemCollection());
+    _systemNames.addStream(DAL.getSystemCollection().transform(
+        StreamTransformer<QuerySnapshot, List<String>>.fromHandlers(
+            handleData: (data, sink) {
+      sink.add(DAL.getSystemNamesFromQuery(data));
+    })));
   }
 
   @override
@@ -25,53 +30,71 @@ class DataDisplayBloc
   }
 
   //final BehaviorSubject<List<String>>  _systemNames = BehaviorSubject<List<String>>();
-  final BehaviorSubject<QuerySnapshot> _systemNames =
-      BehaviorSubject<QuerySnapshot>();
-  Stream<QuerySnapshot> get systemNamesStream => _systemNames.stream;
+  final BehaviorSubject<List<String>> _systemNames =
+      BehaviorSubject<List<String>>();
+  Stream<List<String>> get systemNamesStream => _systemNames.stream;
 
-  BehaviorSubject<List<Map<String, dynamic>>> _systemsData =
-      BehaviorSubject<List<Map<String, dynamic>>>();
+  PublishSubject<List<Map<String, dynamic>>> _systemsData =
+      PublishSubject<List<Map<String, dynamic>>>();
   Stream<List<Map<String, dynamic>>> get systemsDataStream =>
       _systemsData.stream;
 
+  StreamSubscription _currDataStreamSubscription;
+  Map<String, Stream<List<Map<String, dynamic>>>> _dataStreams =
+      HashMap<String, Stream<List<Map<String, dynamic>>>>();
   @override
   Stream<DataDisplayState> eventHandler(
       DataDisplayEvent event, DataDisplayState currentState) async* {
     if (event is InitDataDisplay) {
     } else if (event is ChangeSystemsSelection) {
-      _systemsData = BehaviorSubject<List<Map<String, dynamic>>>();
+      // clean up from preStream<List<Map<String, dynamic>>> query
+      await _currDataStreamSubscription?.cancel();
+      await _systemsData?.close();
 
-      var streams = List<Stream<List<Map<String, dynamic>>>>();
+      if (lastState != null)
+        lastState.systemNames.forEach((prevSystem) {
+          if (!event.newSystems.contains(prevSystem))
+            _dataStreams.remove(prevSystem);
+        });
+
+      _systemsData = PublishSubject<List<Map<String, dynamic>>>();
+
+      //var streams = List<Stream<List<Map<String, dynamic>>>>();
 
       // transform the stream
-      StreamTransformer trans = new StreamTransformer<QuerySnapshot,
+      StreamTransformer trans = StreamTransformer<QuerySnapshot,
           List<Map<String, dynamic>>>.fromHandlers(handleData: handleData);
       event.newSystems.forEach((systemName) {
-        streams.add(DAL.getDataCollection(systemName).transform(trans));
+        //streams.add(DAL.getDataCollection(systemName).transform(trans));
+        _dataStreams.putIfAbsent(systemName,
+            () => DAL.getDataCollection(systemName).transform(trans));
       });
 
       // need scan beacuse when stream merged  streambuilder widget build only at the second stream
-      var combinedStream = Observable.merge(streams)
+      var combinedStream = Observable.merge(_dataStreams.values)
           .scan<List<Map<String, dynamic>>>((acc, curr, i) {
         return acc ?? <Map<String, dynamic>>[]
           ..addAll(curr);
       });
 
-      combinedStream.listen((onData) {
+      // TODO: close listener
+      _currDataStreamSubscription = combinedStream.listen((onData) {
         _systemsData.sink.add(onData);
       });
 
       //_systemsData.addStream(combinedStream);
 
-      yield DataDisplayState.systemsSelected(currentState.systemNames);
+      yield DataDisplayState.systemsSelected(event.newSystems);
     }
   }
 
   void handleData(data, EventSink sink) {
-    var items = List<Map<String, dynamic>>();
-    data.documents.forEach((doc) {
-      items.add(doc.data);
-    });
-    sink.add(items);
+    // var items = List<Map<String, dynamic>>();
+    // data.documents.forEach((doc) {
+    //   items.add(doc.data);
+    // });
+    // sink.add(items);
+
+    sink.add(DAL.getSystemDataFromQuery(data));
   }
 }
