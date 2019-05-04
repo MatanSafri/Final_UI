@@ -6,8 +6,8 @@ import 'package:iot_ui/blocs/data_display/data_display_event.dart';
 import 'package:iot_ui/blocs/data_display/data_display_state.dart';
 import 'package:iot_ui/services/DAL.dart';
 import 'package:iot_ui/widgets/logout_button.dart';
-import 'package:flutter_multiselect/flutter_multiselect.dart';
 import 'package:iot_ui/widgets/pending_action.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -36,118 +36,88 @@ class _HomePageState extends State<HomePage> {
   }
 
   DataDisplayBloc _dataDisplayBloc;
-  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     var children = <Widget>[];
-    // children.add(
-    //   StreamBuilder<List<String>>(
-    //     stream: _dataDisplayBloc.systemNamesStream,
-    //     builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
-    //       if (snapshot.hasError)
-    //         return new Text('${snapshot.error}');
-    //       else if (snapshot.connectionState == ConnectionState.waiting)
-    //         return Container(
-    //             child: PendingAction(), height: 120); //Container();
-    //       List<String> systemsNames = List<String>();
-    //       List<Map> dataSource = List<Map>();
-    //       if (snapshot.hasData) {
-    //         systemsNames.addAll(snapshot.data.reversed);
-    //         int index = 0;
-    //         systemsNames.forEach((systemName) {
-    //           dataSource.add({"display": systemName, "value": index++});
-    //         });
-    //       }
-    //       var getDataChildrens = <Widget>[];
-
-    //       getDataChildrens.add(Form(
-    //           key: _formKey,
-    //           autovalidate: true,
-    //           child: MultiSelect(
-    //               autovalidate: true,
-    //               titleText: "Select system",
-    //               validator: (value) {
-    //                 if (value == null) {
-    //                   return 'Please select one or more option(s)';
-    //                 }
-    //               },
-    //               dataSource: dataSource,
-    //               textField: 'display',
-    //               valueField: 'value',
-    //               filterable: true,
-    //               required: true,
-    //               onSaved: (value) {
-    //                 List<String> selectedSystems = List<String>();
-    //                 value.forEach((i) {
-    //                   selectedSystems.add(systemsNames.elementAt(i));
-    //                 });
-    //                 print("$selectedSystems\n");
-    //                 _dataDisplayBloc.emitEvent(
-    //                     ChangeSystemsSelection(newSystems: selectedSystems));
-    //               })));
-    //       getDataChildrens.add(MaterialButton(
-    //           elevation: 5.0,
-    //           minWidth: 200.0,
-    //           height: 42.0,
-    //           color: Colors.blue,
-    //           child: Text("Get Data",
-    //               style: TextStyle(fontSize: 20.0, color: Colors.white)),
-    //           onPressed: () {
-    //             final FormState form = _formKey.currentState;
-    //             form.save();
-    //           }));
-    //       return ListView(shrinkWrap: true, children: getDataChildrens);
-    //     }));
-
-    //var getDataChildrens = <Widget>[];
-
-    //var checkedSystems = <String>[];
-
     children.add(ExpansionTile(
-      title: Text("Systems"),
+      title: Center(child: Text("Filtering Options")),
       children: <Widget>[
-        StreamBuilder<List<String>>(
-            stream: _dataDisplayBloc.systemNamesStream,
-            builder:
-                (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
-              if (snapshot.hasError)
-                return new Text('${snapshot.error}');
-              else if (snapshot.connectionState == ConnectionState.waiting)
-                return Container(
-                    child: PendingAction(), height: 120); //Container();
-              List<String> systemsNames = List<String>();
-              if (snapshot.hasData) {
-                systemsNames.addAll(snapshot.data.reversed);
-                var systemsCheckBox = <Widget>[];
-
-                systemsNames.forEach((systemName) {
-                  systemsCheckBox.add(Row(
-                    children: <Widget>[
-                      Text(systemName),
-                      StreamBuilder<bool>(
-                          stream: _dataDisplayBloc
-                              .checkStateSystemNamesStream[systemName],
-                          initialData: false,
-                          builder: (BuildContext context,
-                              AsyncSnapshot<bool> snapshot) {
-                            if (snapshot.hasError)
-                              return new Text('${snapshot.error}');
-                            return Checkbox(
-                                value: snapshot.data,
-                                onChanged: (value) {
-                                  _dataDisplayBloc
-                                      .checkStateSystemNamesSink[systemName]
-                                      .add(value);
-                                  _dataDisplayBloc.emitEvent(
-                                      ChangeSystemSelection(systemName, value));
-                                });
-                          }),
-                    ],
-                  ));
-                });
-                return Column(children: systemsCheckBox);
-              }
-            })
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+          Expanded(
+              flex: 1,
+              child: ExpansionTile(
+                  title: Center(child: Text("Systems")),
+                  children: <Widget>[
+                    StreamBuilder<List<String>>(
+                        stream: _dataDisplayBloc.systemNamesStream,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<List<String>> snapshot) {
+                          if (snapshot.hasError)
+                            return new Text('${snapshot.error}');
+                          else if (snapshot.connectionState ==
+                              ConnectionState.waiting)
+                            return Column(children: <Widget>[PendingAction()]);
+                          List<String> systemsNames = List<String>();
+                          if (snapshot.hasData) {
+                            systemsNames.addAll(snapshot.data.reversed);
+                            var systemsCheckBox = <Widget>[];
+                            systemsNames.forEach((systemName) {
+                              systemsCheckBox.add(Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text(systemName),
+                                  StreamBuilder<bool>(
+                                      stream: _dataDisplayBloc
+                                              .checkStateSystemNamesStream[
+                                          systemName],
+                                      initialData: false,
+                                      builder: (BuildContext context,
+                                          AsyncSnapshot<bool> snapshot) {
+                                        if (snapshot.hasError)
+                                          return new Text('${snapshot.error}');
+                                        return Checkbox(
+                                            value: snapshot.data,
+                                            onChanged: (value) {
+                                              _dataDisplayBloc
+                                                  .checkStateSystemNamesSink[
+                                                      systemName]
+                                                  .add(value);
+                                              _dataDisplayBloc.emitEvent(
+                                                  ChangeSystemSelection(
+                                                      systemName, value));
+                                            });
+                                      }),
+                                ],
+                              ));
+                            });
+                            return Column(children: systemsCheckBox);
+                          }
+                        }),
+                  ])),
+          Expanded(
+              flex: 1,
+              child: ExpansionTile(
+                  trailing: Icon(IconData(59670, fontFamily: 'MaterialIcons')),
+                  title: Center(child: Text("Dates")),
+                  children: <Widget>[
+                    FlatButton(
+                        onPressed: () {
+                          DatePicker.showDateTimePicker(context,
+                              showTitleActions: true, onChanged: (date) {
+                            print('change $date');
+                          }, onConfirm: (date) {
+                            print('confirm $date');
+                          },
+                              currentTime: DateTime.now(),
+                              locale: LocaleType.en);
+                        },
+                        child: Text(
+                          'show date time picker ',
+                          style: TextStyle(color: Colors.blue),
+                        ))
+                  ]))
+        ])
       ],
     ));
 
@@ -175,8 +145,8 @@ class _HomePageState extends State<HomePage> {
                 if (snapshot.hasError)
                   return Text('${snapshot.error}');
                 else if (snapshot.connectionState == ConnectionState.waiting)
-                  return Container(
-                      child: PendingAction(), height: 120); //Container();
+                  return Column(
+                      children: <Widget>[PendingAction()]); //Container();
                 if (!snapshot.hasData) return Container();
                 snapshot.data.forEach((item) {
                   print("${item.toString()}\n");
