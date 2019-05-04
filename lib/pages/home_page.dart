@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart' as prefix0;
 import 'package:flutter/material.dart';
 import 'package:iot_ui/blocs/bloc_widgets/bloc_state_builder.dart';
 import 'package:iot_ui/blocs/data_display/data_display_bloc.dart';
@@ -40,31 +41,26 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     var children = <Widget>[];
-    // children.add(BlocEventStateBuilder<DataDisplayEvent, DataDisplayState>(
-    //     bloc: _dataDisplayBloc,
-    //     builder: (BuildContext context, DataDisplayState state) {
-    //       //if (state.isLoading) return PendingAction();
-    //       return _showBody(context, state);
-    //     }));
-
     children.add(StreamBuilder<List<String>>(
         stream: _dataDisplayBloc.systemNamesStream,
         builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
           if (snapshot.hasError)
             return new Text('${snapshot.error}');
           else if (snapshot.connectionState == ConnectionState.waiting)
-            return PendingAction(); //Container();
-
+            return Container(
+                child: PendingAction(), height: 120); //Container();
           List<String> systemsNames = List<String>();
           List<Map> dataSource = List<Map>();
           if (snapshot.hasData) {
-            systemsNames.addAll(snapshot.data);
+            systemsNames.addAll(snapshot.data.reversed);
             int index = 0;
             systemsNames.forEach((systemName) {
               dataSource.add({"display": systemName, "value": index++});
             });
           }
-          return new Form(
+          var getDataChildrens = <Widget>[];
+
+          getDataChildrens.add(Form(
               key: _formKey,
               autovalidate: true,
               child: MultiSelect(
@@ -88,49 +84,24 @@ class _HomePageState extends State<HomePage> {
                     print("$selectedSystems\n");
                     _dataDisplayBloc.emitEvent(
                         ChangeSystemsSelection(newSystems: selectedSystems));
-                  }));
-        }));
-
-    children.add(MaterialButton(
-        elevation: 5.0,
-        minWidth: 200.0,
-        height: 42.0,
-        color: Colors.blue,
-        child: Text("Get Data",
-            style: TextStyle(fontSize: 20.0, color: Colors.white)),
-        onPressed: () {
-          final FormState form = _formKey.currentState;
-          form.save();
+                  })));
+          getDataChildrens.add(MaterialButton(
+              elevation: 5.0,
+              minWidth: 200.0,
+              height: 42.0,
+              color: Colors.blue,
+              child: Text("Get Data",
+                  style: TextStyle(fontSize: 20.0, color: Colors.white)),
+              onPressed: () {
+                final FormState form = _formKey.currentState;
+                form.save();
+              }));
+          return ListView(shrinkWrap: true, children: getDataChildrens);
         }));
 
     children.add(BlocEventStateBuilder<DataDisplayEvent, DataDisplayState>(
         bloc: _dataDisplayBloc,
         builder: (BuildContext context, DataDisplayState state) {
-          // return StreamBuilder<QuerySnapshot>(
-          //     stream: _dataDisplayBloc.systemsDataStream,
-          //     builder: (BuildContext context,
-          //         AsyncSnapshot<QuerySnapshot> snapshot) {
-          //       if (snapshot.hasError)
-          //         return Text('${snapshot.error}');
-          //       else if (snapshot.connectionState == ConnectionState.waiting)
-          //         return Container(); //PendingAction();
-          //       if (!snapshot.hasData) return Container();
-          //       print(
-          //           "this snapshot has ${snapshot.data.documents.length} items \n");
-          //       DAL.getSystemDataFromQuery(snapshot.data).forEach((d) {
-          //         print("$d");
-          //       });
-          //       return Container(
-          //           child: ListView.builder(
-          //               shrinkWrap: true,
-          //               itemCount: snapshot.data.documents.length,
-          //               itemBuilder: (BuildContext context, index) {
-          //                 var currentDoc = snapshot.data.documents[index].data;
-          //                 return ExpansionTile(
-          //                   title: Text(currentDoc.toString()),
-          //                 );
-          //               }));
-          //     });
           return StreamBuilder<List<Map<String, dynamic>>>(
               stream: _dataDisplayBloc.systemsDataStream,
               builder: (BuildContext context,
@@ -138,7 +109,8 @@ class _HomePageState extends State<HomePage> {
                 if (snapshot.hasError)
                   return Text('${snapshot.error}');
                 else if (snapshot.connectionState == ConnectionState.waiting)
-                  return Container(); //PendingAction();
+                  return Container(
+                      child: PendingAction(), height: 120); //Container();
                 if (!snapshot.hasData) return Container();
                 snapshot.data.forEach((item) {
                   print("${item.toString()}\n");
@@ -150,9 +122,30 @@ class _HomePageState extends State<HomePage> {
                         itemCount: snapshot.data.length,
                         itemBuilder: (BuildContext context, index) {
                           var currentDoc = snapshot.data[index];
+                          var dataWidgets = <Widget>[];
+                          //bug i cant do foreach
+                          for (var key in currentDoc.keys) {
+                            dataWidgets.add(Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Column(
+                                  children: <Widget>[
+                                    Text(key.toString() + " : ")
+                                  ],
+                                ),
+                                Column(
+                                  children: <Widget>[
+                                    Text(currentDoc[key].toString())
+                                  ],
+                                )
+                              ],
+                            ));
+                          }
                           return ExpansionTile(
-                            title: Text(currentDoc.toString()),
-                          );
+                              title: Text(currentDoc["device_type"].toString()),
+                              children:
+                                  dataWidgets //<Widget>[Text(currentDoc.toString())],
+                              );
                         }));
               });
         }));
