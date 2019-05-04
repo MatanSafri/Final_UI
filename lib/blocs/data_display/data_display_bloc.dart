@@ -12,16 +12,29 @@ import 'package:rxdart/rxdart.dart';
 class DataDisplayBloc
     extends BlocEventStateBase<DataDisplayEvent, DataDisplayState> {
   DataDisplayBloc()
-      : super(initialState: DataDisplayState.loadingData(List<String>())) {
-    // DAL.onSystemNameDataArrived((systemName) {
-    //   emitEvent(SystemNameArrivedFromDb(newSystem: systemName));
-    // });
-    _systemNames.addStream(DAL.getSystemCollection().transform(
+      //: super(initialState: DataDisplayState.loadingData(List<String>())) {
+      : super(
+            initialState:
+                DataDisplayState(Map<String, dynamic>(), List<String>())) {
+    // TODO: add a listener and close it
+    var systemsNamesStream = DAL.getSystemCollection().transform(
         StreamTransformer<QuerySnapshot, List<String>>.fromHandlers(
             handleData: (data, sink) {
       sink.add(DAL.getSystemNamesFromQuery(data));
-    })));
+    }));
+
+    // TODO: save the close the listener
+    systemsNamesStream.listen((onData) {
+      onData.forEach((systemName) {
+        var behaviorSubject = BehaviorSubject<bool>();
+        _checkStateSystemNames.putIfAbsent(systemName, () => behaviorSubject);
+      });
+    });
+
+    _systemNames.addStream(systemsNamesStream);
   }
+
+  //List<String> _checkedSystems = List<String>();
 
   @override
   void dispose() async {
@@ -35,6 +48,17 @@ class DataDisplayBloc
       BehaviorSubject<List<String>>();
   Stream<List<String>> get systemNamesStream => _systemNames.stream;
 
+  // check state systems streams
+  final Map<String, BehaviorSubject<bool>> _checkStateSystemNames =
+      Map<String, BehaviorSubject<bool>>();
+  Map<String, Stream<bool>> get checkStateSystemNamesStream =>
+      _checkStateSystemNames.map<String, Stream<bool>>(
+          (key, value) => MapEntry(key, value.stream));
+
+  Map<String, StreamSink<bool>> get checkStateSystemNamesSink =>
+      _checkStateSystemNames.map<String, StreamSink<bool>>(
+          (key, value) => MapEntry(key, value.sink));
+
   PublishSubject<List<Map<String, dynamic>>> _systemsData =
       PublishSubject<List<Map<String, dynamic>>>();
   Stream<List<Map<String, dynamic>>> get systemsDataStream =>
@@ -43,30 +67,53 @@ class DataDisplayBloc
   StreamSubscription _currDataStreamSubscription;
   Map<String, Stream<List<Map<String, dynamic>>>> _dataStreams =
       HashMap<String, Stream<List<Map<String, dynamic>>>>();
+
   @override
   Stream<DataDisplayState> eventHandler(
       DataDisplayEvent event, DataDisplayState currentState) async* {
     if (event is InitDataDisplay) {
-    } else if (event is ChangeSystemsSelection) {
+    } else if (event is ChangeSystemSelection) {
+      if (event.selection)
+        //_checkedSystems.add(event.systemName);
+        yield DataDisplayState(Map<String, dynamic>(),
+            currentState.systemNames + [event.systemName]);
+      else {
+        currentState.systemNames.remove(event.systemName);
+        yield DataDisplayState(
+            Map<String, dynamic>(), currentState.systemNames);
+      }
+      //_checkedSystems.remove(event.systemName);
+
+      //yield DataDisplayState.systemsSelected(_checkedSystems);
+      //yield DataDisplayState(Map<String, dynamic>(),currentState.systemNames + [event.systemName],currentState.lastRequestedsystemNames);
+    } else if (event is DisplayData) {
       // clean up from prevStream query
       await _currDataStreamSubscription?.cancel();
       await _systemsData?.close();
 
-      if (lastState != null)
-        lastState.systemNames.forEach((prevSystem) {
-          if (!event.newSystems.contains(prevSystem))
-            _dataStreams.remove(prevSystem);
-        });
+      print("${currentState.systemNames}\n");
+
+      // TODO: add optimazition
+      _dataStreams.clear();
+      //if (lastState != null) {
+
+      //lastState.systemNames.forEach((prevSystem) {
+      //   if (!currentState.systemNames.contains(prevSystem))
+      //     _dataStreams.remove(prevSystem);
+      // });
+      // }
 
       _systemsData = PublishSubject<List<Map<String, dynamic>>>();
 
       // transform the stream
       StreamTransformer trans = StreamTransformer<QuerySnapshot,
           List<Map<String, dynamic>>>.fromHandlers(handleData: handleData);
-      event.newSystems.forEach((systemName) {
+      currentState.systemNames.forEach((systemName) {
         _dataStreams.putIfAbsent(systemName,
             () => DAL.getDataCollection(systemName).transform(trans));
       });
+
+      print("${_dataStreams.length}\n");
 
       // need scan beacuse when stream merged  streambuilder widget build only at the second stream
       var combinedStream = Observable.merge(_dataStreams.values)
@@ -79,17 +126,11 @@ class DataDisplayBloc
         _systemsData.sink.add(onData);
       });
 
-      yield DataDisplayState.systemsSelected(event.newSystems);
+      yield DataDisplayState(Map<String, dynamic>(), currentState.systemNames);
     }
   }
 
   void handleData(data, EventSink sink) {
-    // var items = List<Map<String, dynamic>>();
-    // data.documents.forEach((doc) {
-    //   items.add(doc.data);
-    // });
-    // sink.add(items);
-
     sink.add(DAL.getSystemDataFromQuery(data));
   }
 }

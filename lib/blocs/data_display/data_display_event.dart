@@ -23,7 +23,12 @@ abstract class DataDisplayEvent extends BlocEvent {}
 
 class InitDataDisplay extends DataDisplayEvent {}
 
-class ChangeSystemsSelection extends DataDisplayEvent {
-  List<String> newSystems;
-  ChangeSystemsSelection({@required this.newSystems});
+class DisplayData extends DataDisplayEvent {
+  DisplayData();
+}
+
+class ChangeSystemSelection extends DataDisplayEvent {
+  bool selection;
+  String systemName;
+  ChangeSystemSelection(this.systemName, this.selection);
 }
