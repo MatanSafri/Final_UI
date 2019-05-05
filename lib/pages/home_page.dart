@@ -1,13 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:iot_ui/blocs/bloc_widgets/bloc_state_builder.dart';
 import 'package:iot_ui/blocs/data_display/data_display_bloc.dart';
 import 'package:iot_ui/blocs/data_display/data_display_event.dart';
 import 'package:iot_ui/blocs/data_display/data_display_state.dart';
-import 'package:iot_ui/services/DAL.dart';
 import 'package:iot_ui/widgets/logout_button.dart';
 import 'package:iot_ui/widgets/pending_action.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -56,7 +55,9 @@ class _HomePageState extends State<HomePage> {
                             return new Text('${snapshot.error}');
                           else if (snapshot.connectionState ==
                               ConnectionState.waiting)
-                            return Column(children: <Widget>[PendingAction()]);
+                            return Container(
+                                child: PendingAction(),
+                                height: 120); //Container();
                           List<String> systemsNames = List<String>();
                           if (snapshot.hasData) {
                             systemsNames.addAll(snapshot.data.reversed);
@@ -108,13 +109,64 @@ class _HomePageState extends State<HomePage> {
                             print('change $date');
                           }, onConfirm: (date) {
                             print('confirm $date');
+                            _dataDisplayBloc.startTimeDateSink.add(date);
                           },
                               currentTime: DateTime.now(),
                               locale: LocaleType.en);
                         },
-                        child: Text(
-                          'show date time picker ',
-                          style: TextStyle(color: Colors.blue),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text('Start Date',
+                                style: TextStyle(color: Colors.blue)),
+                            StreamBuilder<DateTime>(
+                                stream: _dataDisplayBloc.startTimeDateStream,
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<DateTime> snapshot) {
+                                  if (snapshot.hasError)
+                                    return new Text('${snapshot.error}');
+                                  else if (snapshot.connectionState ==
+                                      ConnectionState.waiting) return Text("");
+                                  return Center(
+                                    child: Text(
+                                        DateFormat("yyyy.MM.dd  'at' HH:mm")
+                                            .format(snapshot.data)),
+                                  );
+                                }),
+                          ],
+                        )),
+                    FlatButton(
+                        onPressed: () {
+                          DatePicker.showDateTimePicker(context,
+                              showTitleActions: true, onChanged: (date) {
+                            print('change $date');
+                          }, onConfirm: (date) {
+                            print('confirm $date');
+                            _dataDisplayBloc.endTimeDateSink.add(date);
+                          },
+                              currentTime: DateTime.now(),
+                              locale: LocaleType.en);
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text('End Date',
+                                style: TextStyle(color: Colors.blue)),
+                            StreamBuilder<DateTime>(
+                                stream: _dataDisplayBloc.endTimeDateStream,
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<DateTime> snapshot) {
+                                  if (snapshot.hasError)
+                                    return new Text('${snapshot.error}');
+                                  else if (snapshot.connectionState ==
+                                      ConnectionState.waiting) return Text("");
+                                  return Center(
+                                    child: Text(
+                                        DateFormat("yyyy.MM.dd  'at' HH:mm")
+                                            .format(snapshot.data)),
+                                  );
+                                }),
+                          ],
                         ))
                   ]))
         ])
@@ -145,8 +197,8 @@ class _HomePageState extends State<HomePage> {
                 if (snapshot.hasError)
                   return Text('${snapshot.error}');
                 else if (snapshot.connectionState == ConnectionState.waiting)
-                  return Column(
-                      children: <Widget>[PendingAction()]); //Container();
+                  return Container(
+                      child: PendingAction(), height: 120); //Container();
                 if (!snapshot.hasData) return Container();
                 snapshot.data.forEach((item) {
                   print("${item.toString()}\n");

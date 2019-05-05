@@ -32,3 +32,13 @@ class ChangeSystemSelection extends DataDisplayEvent {
   String systemName;
   ChangeSystemSelection(this.systemName, this.selection);
 }
+
+class ChangeStartTimeDate extends DataDisplayEvent {
+  DateTime startTimeDate;
+  ChangeStartTimeDate(this.startTimeDate);
+}
+
+class ChangeEndTimeDate extends DataDisplayEvent {
+  DateTime endTimeDate;
+  ChangeEndTimeDate(this.endTimeDate);
+}

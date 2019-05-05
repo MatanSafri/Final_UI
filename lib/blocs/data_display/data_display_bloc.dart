@@ -23,11 +23,11 @@ class DataDisplayBloc
       sink.add(DAL.getSystemNamesFromQuery(data));
     }));
 
-    // TODO: save the close the listener
+    // TODO: save and close the listener
     systemsNamesStream.listen((onData) {
       onData.forEach((systemName) {
-        var behaviorSubject = BehaviorSubject<bool>();
-        _checkStateSystemNames.putIfAbsent(systemName, () => behaviorSubject);
+        _checkStateSystemNames.putIfAbsent(
+            systemName, () => BehaviorSubject<bool>());
       });
     });
 
@@ -38,9 +38,12 @@ class DataDisplayBloc
 
   @override
   void dispose() async {
+    for (var bs in _checkStateSystemNames.values) await bs?.close();
     await _currDataStreamSubscription?.cancel();
     await _systemNames?.close();
     await _systemsData?.close();
+    await _endTimeDate?.close();
+    await _startTimeDate?.close();
   }
 
   //final BehaviorSubject<List<String>>  _systemNames = BehaviorSubject<List<String>>();
@@ -67,6 +70,14 @@ class DataDisplayBloc
   StreamSubscription _currDataStreamSubscription;
   Map<String, Stream<List<Map<String, dynamic>>>> _dataStreams =
       HashMap<String, Stream<List<Map<String, dynamic>>>>();
+
+  final BehaviorSubject<DateTime> _endTimeDate = BehaviorSubject<DateTime>();
+  Stream<DateTime> get endTimeDateStream => _endTimeDate.stream;
+  StreamSink<DateTime> get endTimeDateSink => _endTimeDate.sink;
+
+  final BehaviorSubject<DateTime> _startTimeDate = BehaviorSubject<DateTime>();
+  Stream<DateTime> get startTimeDateStream => _startTimeDate.stream;
+  StreamSink<DateTime> get startTimeDateSink => _startTimeDate.sink;
 
   @override
   Stream<DataDisplayState> eventHandler(
