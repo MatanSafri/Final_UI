@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.blue,
           ),
-          home: InitializationPage(), // AddDataPage(),
+          home: InitializationPage(), //AddDataPage(),
           routes: {
             '/decision': (BuildContext context) => DecisionPage(),
             '/homepage': (BuildContext context) => HomePage(),

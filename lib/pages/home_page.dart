@@ -110,6 +110,8 @@ class _HomePageState extends State<HomePage> {
                           }, onConfirm: (date) {
                             print('confirm $date');
                             _dataDisplayBloc.startTimeDateSink.add(date);
+                            _dataDisplayBloc
+                                .emitEvent(ChangeStartTimeDate(date));
                           },
                               currentTime: DateTime.now(),
                               locale: LocaleType.en);
@@ -143,6 +145,7 @@ class _HomePageState extends State<HomePage> {
                           }, onConfirm: (date) {
                             print('confirm $date');
                             _dataDisplayBloc.endTimeDateSink.add(date);
+                            _dataDisplayBloc.emitEvent(ChangeEndTimeDate(date));
                           },
                               currentTime: DateTime.now(),
                               locale: LocaleType.en);
@@ -200,10 +203,6 @@ class _HomePageState extends State<HomePage> {
                   return Container(
                       child: PendingAction(), height: 120); //Container();
                 if (!snapshot.hasData) return Container();
-                snapshot.data.forEach((item) {
-                  print("${item.toString()}\n");
-                });
-                //print("${snapshot.data.toString()}\n");
                 return Container(
                     child: ListView.builder(
                         shrinkWrap: true,

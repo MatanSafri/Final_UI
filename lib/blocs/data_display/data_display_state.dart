@@ -1,32 +1,20 @@
+import 'dart:collection';
+
 import 'package:iot_ui/blocs/bloc_helpers/bloc_event_state.dart';
 import 'package:meta/meta.dart';
 
 class DataDisplayState extends BlocState {
-  // final bool isLoading;
-  // final Map<String, dynamic> data;
-  // final List<String> systemNames;
+  final UnmodifiableListView<String> systemNames;
+  final DateTime startDateTime;
+  final DateTime endDateTime;
 
-  // DataDisplayState(
-  //     {this.isLoading: false, this.data, @required this.systemNames});
+  DataDisplayState.init()
+      : systemNames = UnmodifiableListView<String>(List<String>()),
+        startDateTime = null,
+        endDateTime = null;
 
-  // factory DataDisplayState.loadingData(List<String> systemNames) {
-  //   return DataDisplayState(
-  //       isLoading: false,
-  //       data: Map<String, dynamic>(),
-  //       systemNames: systemNames);
-  // }
-
-  // factory DataDisplayState.systemsSelected(List<String> systemNames) {
-  //   return DataDisplayState(systemNames: systemNames);
-  // }
-  //final bool isLoading;
-
-  //TODO: make diffrent constructors
-  Map<String, dynamic> data;
-  List<String> systemNames;
-
-  DataDisplayState(Map<String, dynamic> _data, List<String> _systemNames) {
-    data = _data;
-    systemNames = _systemNames;
-  }
+  DataDisplayState(List<String> sysNames, DateTime start, DateTime end)
+      : systemNames = UnmodifiableListView<String>(sysNames),
+        startDateTime = start,
+        endDateTime = end;
 }

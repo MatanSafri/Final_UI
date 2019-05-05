@@ -124,7 +124,6 @@ class _AddDataPageState extends State<AddDataPage> {
                   systemController.text,
                   deviceIdController.text,
                   deviceTypeController.text,
-                  DateTime.now(),
                   dataType,
                   fieldNameController.text,
                   dataController.text);

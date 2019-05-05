@@ -3,16 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as auth;
 
 class PubsubHandler {
-  static String _createJsonFormData(
-      String system,
-      String deviceId,
-      String deviceType,
-      DateTime time,
-      String dataType,
-      String fieldName,
-      String data) {
+  static String _createJsonFormData(String system, String deviceId,
+      String deviceType, String dataType, String fieldName, String data) {
     var jsonFormat =
-        "{\"system\":\"$system\",\"device_id\":\"$deviceId\",\"device_type\":\"$deviceType\",\"data\":[{\"time\":\"${time.toString()}\",\"type\":\"$dataType\",\"fieldName\":\"$fieldName\",\"data\" :\"$data\"}]}";
+        "{\"system\":\"$system\",\"device_id\":\"$deviceId\",\"device_type\":\"$deviceType\",\"data\":[{\"type\":\"$dataType\",\"fieldName\":\"$fieldName\",\"data\" :\"$data\"}]}";
     print("$jsonFormat\n");
     return jsonFormat;
   }
@@ -32,7 +26,7 @@ class PubsubHandler {
   }
 
   static void sendToPubSub(String system, String deviceId, String deviceType,
-      DateTime time, String dataType, String fieldName, String data) async {
+      String dataType, String fieldName, String data) async {
     var client;
     PubSub pubsub;
     var project = 'iot-final-8b2e0';
@@ -42,6 +36,6 @@ class PubsubHandler {
       return pubsub.lookupTopic('Test');
     }).then((Topic topic) => topic.publish(Message.withString(
         _createJsonFormData(
-            system, deviceId, deviceType, time, dataType, fieldName, data))));
+            system, deviceId, deviceType, dataType, fieldName, data))));
   }
 }

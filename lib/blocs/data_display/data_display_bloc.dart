@@ -13,9 +13,7 @@ class DataDisplayBloc
     extends BlocEventStateBase<DataDisplayEvent, DataDisplayState> {
   DataDisplayBloc()
       //: super(initialState: DataDisplayState.loadingData(List<String>())) {
-      : super(
-            initialState:
-                DataDisplayState(Map<String, dynamic>(), List<String>())) {
+      : super(initialState: DataDisplayState.init()) {
     // TODO: add a listener and close it
     var systemsNamesStream = DAL.getSystemCollection().transform(
         StreamTransformer<QuerySnapshot, List<String>>.fromHandlers(
@@ -84,19 +82,27 @@ class DataDisplayBloc
       DataDisplayEvent event, DataDisplayState currentState) async* {
     if (event is InitDataDisplay) {
     } else if (event is ChangeSystemSelection) {
-      if (event.selection)
-        //_checkedSystems.add(event.systemName);
-        yield DataDisplayState(Map<String, dynamic>(),
-            currentState.systemNames + [event.systemName]);
-      else {
-        currentState.systemNames.remove(event.systemName);
+      print("selected systems ${currentState.systemNames}\n");
+      print("changed sys ${event.systemName} is ${event.selection}\n");
+      if (event.selection) {
+        print("add ${currentState.systemNames + [event.systemName]}\n");
         yield DataDisplayState(
-            Map<String, dynamic>(), currentState.systemNames);
+            (currentState.systemNames + [event.systemName]).toList(),
+            currentState.startDateTime,
+            currentState.endDateTime);
+      } else {
+        var x = currentState.systemNames.toList();
+        x.remove(event.systemName);
+        print("remove $x\n");
+        yield DataDisplayState(
+            x, currentState.startDateTime, currentState.endDateTime);
       }
-      //_checkedSystems.remove(event.systemName);
-
-      //yield DataDisplayState.systemsSelected(_checkedSystems);
-      //yield DataDisplayState(Map<String, dynamic>(),currentState.systemNames + [event.systemName],currentState.lastRequestedsystemNames);
+    } else if (event is ChangeStartTimeDate) {
+      yield DataDisplayState(currentState.systemNames, event.startTimeDate,
+          currentState.endDateTime);
+    } else if (event is ChangeEndTimeDate) {
+      yield DataDisplayState(currentState.systemNames,
+          currentState.startDateTime, event.endTimeDate);
     } else if (event is DisplayData) {
       // clean up from prevStream query
       await _currDataStreamSubscription?.cancel();
@@ -120,8 +126,13 @@ class DataDisplayBloc
       StreamTransformer trans = StreamTransformer<QuerySnapshot,
           List<Map<String, dynamic>>>.fromHandlers(handleData: handleData);
       currentState.systemNames.forEach((systemName) {
-        _dataStreams.putIfAbsent(systemName,
-            () => DAL.getDataCollection(systemName).transform(trans));
+        _dataStreams.putIfAbsent(
+            systemName,
+            () => DAL
+                .getDataCollection(systemName,
+                    startDate: currentState.startDateTime,
+                    endDate: currentState.endDateTime)
+                .transform(trans));
       });
 
       print("${_dataStreams.length}\n");
@@ -137,7 +148,8 @@ class DataDisplayBloc
         _systemsData.sink.add(onData);
       });
 
-      yield DataDisplayState(Map<String, dynamic>(), currentState.systemNames);
+      yield DataDisplayState(currentState.systemNames,
+          currentState.startDateTime, currentState.endDateTime);
     }
   }
 

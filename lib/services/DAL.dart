@@ -21,12 +21,33 @@ class DAL {
     });
   }
 
-  static Stream<QuerySnapshot> getDataCollection(String systemName) {
-    return Firestore.instance
+  static Stream<QuerySnapshot> getDataCollection(String systemName,
+      {DateTime startDate,
+      DateTime endDate,
+      String deviceId,
+      String deviceType,
+      String type}) {
+    var collection = Firestore.instance
         .collection('systems')
         .document(systemName)
-        .collection('data')
-        .snapshots();
+        .collection('data');
+
+    dynamic quary = collection;
+
+    if (startDate != null)
+      quary = quary.where("time", isGreaterThanOrEqualTo: startDate);
+
+    if (endDate != null)
+      quary = quary.where("time", isLessThanOrEqualTo: endDate);
+
+    if (deviceId != null) quary = quary.where("device_id", isEqualTo: deviceId);
+
+    if (deviceType != null)
+      quary = quary.where("device_type", isEqualTo: deviceType);
+
+    if (type != null) quary = quary.where("type", isEqualTo: type);
+
+    return quary.snapshots();
   }
 
   static List<Map<String, dynamic>> getSystemDataFromQuery(
