@@ -42,3 +42,7 @@ class ChangeEndTimeDate extends DataDisplayEvent {
   DateTime endTimeDate;
   ChangeEndTimeDate(this.endTimeDate);
 }
+
+class ClearSystemsSelection extends DataDisplayEvent {}
+
+class ClearDatesSelection extends DataDisplayEvent {}

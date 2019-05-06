@@ -81,7 +81,7 @@ class _AddDataPageState extends State<AddDataPage> {
           onChanged: (v) => setState(() {
                 dataType = v;
               }),
-          items: <String>['attribute', 'video', 'audio', 'image']
+          items: <String>['text', 'number', 'video', 'audio', 'image']
               .map<DropdownMenuItem<String>>((String value) {
             return DropdownMenuItem<String>(
               value: value,
@@ -124,6 +124,7 @@ class _AddDataPageState extends State<AddDataPage> {
                   systemController.text,
                   deviceIdController.text,
                   deviceTypeController.text,
+                  DateTime.now(),
                   dataType,
                   fieldNameController.text,
                   dataController.text);

@@ -1,4 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:iot_ui/data_model/DataEntry.dart';
+import 'package:iot_ui/data_model/NumberDataEntry.dart';
+import 'package:iot_ui/data_model/TextDataEntry.dart';
 
 class DAL {
   static Stream<QuerySnapshot> getSystemCollection() {
@@ -50,14 +55,51 @@ class DAL {
     return quary.snapshots();
   }
 
-  static List<Map<String, dynamic>> getSystemDataFromQuery(
-      QuerySnapshot collection) {
-    List<Map<String, dynamic>> systemsData = List<Map<String, dynamic>>();
+  // static List<Map<String, dynamic>> getSystemDataFromQuery(
+  //     QuerySnapshot collection) {
+  //   List<Map<String, dynamic>> systemsData = List<Map<String, dynamic>>();
+  //   collection.documents.forEach((d) {
+  //     systemsData.add(d.data);
+  //   });
+  //   return systemsData;
+  // }
+  static List<DataEntry> getSystemDataFromQuery(QuerySnapshot collection) {
+    var systemsData = List<DataEntry>();
     collection.documents.forEach((d) {
-      systemsData.add(d.data);
+      switch (d.data["type"].toString().toLowerCase()) {
+        case "text":
+          {
+            systemsData.add(TextDataEntry(
+                d.data["device_id"],
+                d.data["device_type"],
+                d.data["system_name"],
+                DateTime.tryParse(d.data["time"]),
+                d.data["type"],
+                d.data["field_name"],
+                d.data["data"]));
+            break;
+          }
+        case "number":
+          {
+            systemsData.add(NumberDataEntry(
+                d.data["device_id"],
+                d.data["device_type"],
+                d.data["system_name"],
+                DateTime.tryParse(d.data["time"]),
+                d.data["type"],
+                d.data["field_name"],
+                double.parse(d.data["data"])));
+            break;
+          }
+      }
     });
     return systemsData;
   }
+
+  // static Future<File> downloadFileFromStorage async (String uri,String memiFormat)
+  //  {
+
+  //  }
 
   // static String getSystemName(QuerySnapshot snapshot)
   // {

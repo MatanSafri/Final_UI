@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:collection';
-
-import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iot_ui/blocs/bloc_helpers/bloc_event_state.dart';
 import 'package:iot_ui/blocs/data_display/data_display_event.dart';
 import 'package:iot_ui/blocs/data_display/data_display_state.dart';
+import 'package:iot_ui/data_model/DataEntry.dart';
 import 'package:iot_ui/services/DAL.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -18,7 +17,10 @@ class DataDisplayBloc
     var systemsNamesStream = DAL.getSystemCollection().transform(
         StreamTransformer<QuerySnapshot, List<String>>.fromHandlers(
             handleData: (data, sink) {
-      sink.add(DAL.getSystemNamesFromQuery(data));
+      var systemNames = DAL.getSystemNamesFromQuery(data);
+      sink.add(systemNames);
+      _allSystemsNames.clear();
+      _allSystemsNames.addAll(systemNames);
     }));
 
     // TODO: save and close the listener
@@ -32,7 +34,7 @@ class DataDisplayBloc
     _systemNames.addStream(systemsNamesStream);
   }
 
-  //List<String> _checkedSystems = List<String>();
+  List<String> _allSystemsNames = List<String>();
 
   @override
   void dispose() async {
@@ -60,14 +62,13 @@ class DataDisplayBloc
       _checkStateSystemNames.map<String, StreamSink<bool>>(
           (key, value) => MapEntry(key, value.sink));
 
-  PublishSubject<List<Map<String, dynamic>>> _systemsData =
-      PublishSubject<List<Map<String, dynamic>>>();
-  Stream<List<Map<String, dynamic>>> get systemsDataStream =>
-      _systemsData.stream;
+  PublishSubject<List<DataEntry>> _systemsData =
+      PublishSubject<List<DataEntry>>();
+  Stream<List<DataEntry>> get systemsDataStream => _systemsData.stream;
 
   StreamSubscription _currDataStreamSubscription;
-  Map<String, Stream<List<Map<String, dynamic>>>> _dataStreams =
-      HashMap<String, Stream<List<Map<String, dynamic>>>>();
+  Map<String, Stream<List<DataEntry>>> _dataStreams =
+      HashMap<String, Stream<List<DataEntry>>>();
 
   final BehaviorSubject<DateTime> _endTimeDate = BehaviorSubject<DateTime>();
   Stream<DateTime> get endTimeDateStream => _endTimeDate.stream;
@@ -82,10 +83,7 @@ class DataDisplayBloc
       DataDisplayEvent event, DataDisplayState currentState) async* {
     if (event is InitDataDisplay) {
     } else if (event is ChangeSystemSelection) {
-      print("selected systems ${currentState.systemNames}\n");
-      print("changed sys ${event.systemName} is ${event.selection}\n");
       if (event.selection) {
-        print("add ${currentState.systemNames + [event.systemName]}\n");
         yield DataDisplayState(
             (currentState.systemNames + [event.systemName]).toList(),
             currentState.startDateTime,
@@ -93,7 +91,6 @@ class DataDisplayBloc
       } else {
         var x = currentState.systemNames.toList();
         x.remove(event.systemName);
-        print("remove $x\n");
         yield DataDisplayState(
             x, currentState.startDateTime, currentState.endDateTime);
       }
@@ -103,6 +100,11 @@ class DataDisplayBloc
     } else if (event is ChangeEndTimeDate) {
       yield DataDisplayState(currentState.systemNames,
           currentState.startDateTime, event.endTimeDate);
+    } else if (event is ClearDatesSelection) {
+      yield DataDisplayState(currentState.systemNames, null, null);
+    } else if (event is ClearSystemsSelection) {
+      yield DataDisplayState(
+          List<String>(), currentState.startDateTime, currentState.endDateTime);
     } else if (event is DisplayData) {
       // clean up from prevStream query
       await _currDataStreamSubscription?.cancel();
@@ -120,12 +122,17 @@ class DataDisplayBloc
       // });
       // }
 
-      _systemsData = PublishSubject<List<Map<String, dynamic>>>();
+      _systemsData = PublishSubject<List<DataEntry>>();
 
       // transform the stream
-      StreamTransformer trans = StreamTransformer<QuerySnapshot,
-          List<Map<String, dynamic>>>.fromHandlers(handleData: handleData);
-      currentState.systemNames.forEach((systemName) {
+      StreamTransformer trans =
+          StreamTransformer<QuerySnapshot, List<DataEntry>>.fromHandlers(
+              handleData: handleData);
+      var querySystems = currentState.systemNames.length > 0
+          ? currentState.systemNames
+          : _allSystemsNames;
+      print("query Systems: $querySystems \n");
+      querySystems.forEach((systemName) {
         _dataStreams.putIfAbsent(
             systemName,
             () => DAL
@@ -139,8 +146,8 @@ class DataDisplayBloc
 
       // need scan beacuse when stream merged  streambuilder widget build only at the second stream
       var combinedStream = Observable.merge(_dataStreams.values)
-          .scan<List<Map<String, dynamic>>>((acc, curr, i) {
-        return acc ?? <Map<String, dynamic>>[]
+          .scan<List<DataEntry>>((acc, curr, i) {
+        return acc ?? <DataEntry>[]
           ..addAll(curr);
       });
 
