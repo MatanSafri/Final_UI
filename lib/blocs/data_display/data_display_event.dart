@@ -33,6 +33,12 @@ class ChangeSystemSelection extends DataDisplayEvent {
   ChangeSystemSelection(this.systemName, this.selection);
 }
 
+class ChangeDevicesSelection extends DataDisplayEvent {
+  bool selection;
+  String device;
+  ChangeDevicesSelection(this.device, this.selection);
+}
+
 class ChangeStartTimeDate extends DataDisplayEvent {
   DateTime startTimeDate;
   ChangeStartTimeDate(this.startTimeDate);
@@ -44,5 +50,7 @@ class ChangeEndTimeDate extends DataDisplayEvent {
 }
 
 class ClearSystemsSelection extends DataDisplayEvent {}
+
+class ClearDevicesSelection extends DataDisplayEvent {}
 
 class ClearDatesSelection extends DataDisplayEvent {}

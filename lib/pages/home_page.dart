@@ -188,7 +188,66 @@ class _HomePageState extends State<HomePage> {
                           _dataDisplayBloc.endTimeDateSink.add(null);
                           _dataDisplayBloc.emitEvent(ClearDatesSelection());
                         }),
-                  ])
+                  ]),
+              ExpansionTile(
+                  title: Center(child: Text("Devices")),
+                  children: <Widget>[
+                    StreamBuilder<List<String>>(
+                        stream: _dataDisplayBloc.systemDevicesStream,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<List<String>> snapshot) {
+                          if (snapshot.hasError)
+                            return new Text('${snapshot.error}');
+                          else if (snapshot.connectionState ==
+                              ConnectionState.waiting)
+                            return Container(
+                                child: PendingAction(),
+                                height: 120); //Container();
+                          List<String> devices = List<String>();
+                          if (snapshot.hasData) {
+                            devices.addAll(snapshot.data.reversed);
+                            var systemsCheckBox = <Widget>[];
+                            devices.forEach((device) {
+                              systemsCheckBox.add(Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text(device),
+                                  StreamBuilder<bool>(
+                                      stream: _dataDisplayBloc
+                                          .checkStateDevicesStream[device],
+                                      initialData: false,
+                                      builder: (BuildContext context,
+                                          AsyncSnapshot<bool> snapshot) {
+                                        if (snapshot.hasError)
+                                          return new Text('${snapshot.error}');
+                                        return Checkbox(
+                                            value: snapshot.data,
+                                            onChanged: (value) {
+                                              _dataDisplayBloc
+                                                  .checkStateDevicesSink[device]
+                                                  .add(value);
+                                              _dataDisplayBloc.emitEvent(
+                                                  ChangeDevicesSelection(
+                                                      device, value));
+                                            });
+                                      }),
+                                ],
+                              ));
+                            });
+                            return Column(children: systemsCheckBox);
+                          }
+                        }),
+                    FlatButton(
+                        child: Text("Clear"),
+                        onPressed: () {
+                          _dataDisplayBloc.checkStateDevicesSink.values
+                              .forEach((sink) {
+                            sink.add(false);
+                          });
+                          _dataDisplayBloc.emitEvent(ClearDevicesSelection());
+                        }),
+                  ]),
             ]),
           ],
         )
