@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:iot_ui/blocs/bloc_widgets/bloc_state_builder.dart';
 import 'package:iot_ui/blocs/data_display/data_display_bloc.dart';
 import 'package:iot_ui/blocs/data_display/data_display_event.dart';
@@ -41,14 +42,12 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     var children = <Widget>[];
-    children.add(ExpansionTile(
-      title: Center(child: Text("Filtering Options")),
-      children: <Widget>[
-        ListView(
-          shrinkWrap: true,
-          children: <Widget>[
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: <
-                Widget>[
+    children.add(Expanded(
+      flex: 4,
+      child: SingleChildScrollView(
+        child: ExpansionTile(
+            title: Center(child: Text("Filtering Options")),
+            children: <Widget>[
               ExpansionTile(title: Center(child: Text("Systems")), children: <
                   Widget>[
                 StreamBuilder<List<String>>(
@@ -249,27 +248,28 @@ class _HomePageState extends State<HomePage> {
                         }),
                   ]),
             ]),
-          ],
-        )
-      ],
+      ),
     ));
 
-    children.add(MaterialButton(
-        elevation: 5.0,
-        minWidth: 200.0,
-        height: 42.0,
-        color: Colors.blue,
-        child: Text("Get Data",
-            style: TextStyle(fontSize: 20.0, color: Colors.white)),
-        onPressed: () {
-          //print("my checked systems $checkedSystems\n");
-          _dataDisplayBloc.emitEvent(DisplayData());
-        }));
+    children.add(Flexible(
+      flex: 1,
+      child: MaterialButton(
+          elevation: 5.0,
+          minWidth: 200.0,
+          height: 42.0,
+          color: Colors.blue,
+          child: Text("Get Data",
+              style: TextStyle(fontSize: 20.0, color: Colors.white)),
+          onPressed: () {
+            //print("my checked systems $checkedSystems\n");
+            _dataDisplayBloc.emitEvent(DisplayData());
+          }),
+    ));
 
     //children.add(ListView(shrinkWrap: true, children: getDataChildrens));
 
     children.add(Expanded(
-      flex: 5,
+      flex: 8,
       child: BlocEventStateBuilder<DataDisplayEvent, DataDisplayState>(
           bloc: _dataDisplayBloc,
           builder: (BuildContext context, DataDisplayState state) {
@@ -292,118 +292,88 @@ class _HomePageState extends State<HomePage> {
                         var currentDataEntry = snapshot.data[index];
                         var dataEntryWidgets = <Widget>[];
                         Widget trailing;
-
-                        dataEntryWidgets.add(Container(
-                          decoration: new BoxDecoration(
-                              border: new Border(
-                                  bottom: BorderSide(color: Colors.blue[200]))),
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  "System name:",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue[900]),
-                                ),
-                                Text(currentDataEntry.systemName)
-                              ]),
-                        ));
-
-                        dataEntryWidgets.add(Container(
-                          decoration: new BoxDecoration(
-                              border: new Border(
-                                  bottom: BorderSide(color: Colors.blue[200]))),
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  "Device Id:",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue[900]),
-                                ),
-                                Text(currentDataEntry.deviceId)
-                              ]),
-                        ));
-
-                        dataEntryWidgets.add(Container(
-                          decoration: new BoxDecoration(
-                              border: new Border(
-                                  bottom: BorderSide(color: Colors.blue[200]))),
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  "Device type:",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue[900]),
-                                ),
-                                Text(currentDataEntry.deviceType)
-                              ]),
-                        ));
-
-                        dataEntryWidgets.add(Container(
-                          decoration: new BoxDecoration(
-                              border: new Border(
-                                  bottom: BorderSide(color: Colors.blue[200]))),
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  "time: ",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue[900]),
-                                ),
-                                Text(DateFormat("yyyy.MM.dd  'at' HH:mm")
-                                    .format(currentDataEntry.time))
-                              ]),
-                        ));
+                        String dataValue;
 
                         if (currentDataEntry is TextDataEntry) {
-                          trailing = Icon(const IconData(57560,
-                              fontFamily: 'MaterialIcons'));
-                          dataEntryWidgets.add(Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  currentDataEntry.fieldName + ":",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue[900]),
-                                ),
-                                Text(currentDataEntry.data)
-                              ]));
+                          trailing = Icon(
+                            const IconData(57560, fontFamily: 'MaterialIcons'),
+                            size: 40,
+                          );
+                          dataValue = currentDataEntry.data;
+                        } else if (currentDataEntry is NumberDataEntry) {
+                          trailing = trailing = Icon(
+                            const IconData(57922, fontFamily: 'MaterialIcons'),
+                            size: 40,
+                          );
+                          dataValue = currentDataEntry.data.toString();
                         }
 
-                        if (currentDataEntry is NumberDataEntry) {
-                          trailing = Icon(const IconData(57922,
-                              fontFamily: 'MaterialIcons'));
-                          dataEntryWidgets.add(Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                        dataEntryWidgets.add(Container(
+                            decoration: BoxDecoration(
+                                color: Colors.blue[300],
+                                borderRadius: BorderRadius.circular(16.0),
+                                border: Border.all(
+                                    color: Colors.blue[500], width: 2.0)),
+                            child: Row(
                               children: <Widget>[
-                                Text(
-                                  currentDataEntry.fieldName + ":",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue[900]),
+                                Container(
+                                    height: 70,
+                                    width: 70,
+                                    child: trailing,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    )),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        currentDataEntry.systemName,
+                                        style: TextStyle(
+                                            fontSize: 27,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        currentDataEntry.deviceId +
+                                            "," +
+                                            currentDataEntry.deviceType,
+                                        style: TextStyle(
+                                          fontSize: 21,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat("yyyy.MM.dd  'at' HH:mm")
+                                            .format(currentDataEntry.time),
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        currentDataEntry.fieldName +
+                                            ":" +
+                                            dataValue,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                Text(currentDataEntry.data.toString())
-                              ]));
-                        }
+                              ],
+                            )));
 
-                        return ExpansionTile(
-                            trailing: trailing,
-                            title: Center(
-                                child: Text(currentDataEntry.systemName)),
-                            children: dataEntryWidgets);
-                        // return Card(
-                        //   child: Column(
-                        //     children: dataEntryWidgets,
-                        //   ),
-                        //);
+                        return Card(
+                          child: Column(
+                            children: dataEntryWidgets,
+                          ),
+                        );
                       });
                 });
           }),
@@ -422,12 +392,8 @@ class _HomePageState extends State<HomePage> {
               ),
               body: Container(
                 padding: EdgeInsets.all(16.0),
-                child: Column(
-                    children:
-                        children), //new ListView(shrinkWrap: true, children: children),
-              ))
-          //_showBody(context)),
-          ),
+                child: Column(children: children),
+              ))),
     );
   }
 }

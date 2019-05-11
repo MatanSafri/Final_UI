@@ -115,6 +115,7 @@ class DataDisplayBloc
                 _checkedSystemsDevices.add(selectedSystemsDevice);
             });
           });
+
           _systemsDevices.sink.add(_checkedSystemsDevices.toList());
         }
       });
