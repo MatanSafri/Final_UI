@@ -247,6 +247,130 @@ class _HomePageState extends State<HomePage> {
                           _dataDisplayBloc.emitEvent(ClearDevicesSelection());
                         }),
                   ]),
+              ExpansionTile(
+                  title: Center(child: Text("Devices Types")),
+                  children: <Widget>[
+                    StreamBuilder<List<String>>(
+                        stream: _dataDisplayBloc.systemDevicesTypesStream,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<List<String>> snapshot) {
+                          if (snapshot.hasError)
+                            return new Text('${snapshot.error}');
+                          else if (snapshot.connectionState ==
+                              ConnectionState.waiting)
+                            return Container(
+                                child: PendingAction(),
+                                height: 120); //Container();
+                          List<String> devicesTypes = List<String>();
+                          if (snapshot.hasData) {
+                            devicesTypes.addAll(snapshot.data.reversed);
+                            var systemsCheckBox = <Widget>[];
+                            devicesTypes.forEach((deviceType) {
+                              systemsCheckBox.add(Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text(deviceType),
+                                  StreamBuilder<bool>(
+                                      stream: _dataDisplayBloc
+                                              .checkStateDevicesTypesStream[
+                                          deviceType],
+                                      initialData: false,
+                                      builder: (BuildContext context,
+                                          AsyncSnapshot<bool> snapshot) {
+                                        if (snapshot.hasError)
+                                          return new Text('${snapshot.error}');
+                                        return Checkbox(
+                                            value: snapshot.data,
+                                            onChanged: (value) {
+                                              _dataDisplayBloc
+                                                  .checkStateDevicesTypesSink[
+                                                      deviceType]
+                                                  .add(value);
+                                              _dataDisplayBloc.emitEvent(
+                                                  ChangeDevicesTypesSelection(
+                                                      deviceType, value));
+                                            });
+                                      }),
+                                ],
+                              ));
+                            });
+                            return Column(children: systemsCheckBox);
+                          }
+                        }),
+                    FlatButton(
+                        child: Text("Clear"),
+                        onPressed: () {
+                          _dataDisplayBloc.checkStateDevicesTypesSink.values
+                              .forEach((sink) {
+                            sink.add(false);
+                          });
+                          _dataDisplayBloc
+                              .emitEvent(ClearDevicesTypesSelection());
+                        }),
+                  ]),
+              ExpansionTile(
+                  title: Center(child: Text("Field Names")),
+                  children: <Widget>[
+                    StreamBuilder<List<String>>(
+                        stream: _dataDisplayBloc.systemFieldsNamesStream,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<List<String>> snapshot) {
+                          if (snapshot.hasError)
+                            return new Text('${snapshot.error}');
+                          else if (snapshot.connectionState ==
+                              ConnectionState.waiting)
+                            return Container(
+                                child: PendingAction(),
+                                height: 120); //Container();
+                          List<String> fieldsNames = List<String>();
+                          if (snapshot.hasData) {
+                            fieldsNames.addAll(snapshot.data.reversed);
+                            var systemsCheckBox = <Widget>[];
+                            fieldsNames.forEach((fieldName) {
+                              systemsCheckBox.add(Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text(fieldName),
+                                  StreamBuilder<bool>(
+                                      stream: _dataDisplayBloc
+                                              .checkStateFieldsNamesStream[
+                                          fieldName],
+                                      initialData: false,
+                                      builder: (BuildContext context,
+                                          AsyncSnapshot<bool> snapshot) {
+                                        if (snapshot.hasError)
+                                          return new Text('${snapshot.error}');
+                                        return Checkbox(
+                                            value: snapshot.data,
+                                            onChanged: (value) {
+                                              _dataDisplayBloc
+                                                  .checkStateFieldsNamesSink[
+                                                      fieldName]
+                                                  .add(value);
+                                              _dataDisplayBloc.emitEvent(
+                                                  ChangeFieldsNamesSelection(
+                                                      fieldName, value));
+                                            });
+                                      }),
+                                ],
+                              ));
+                            });
+                            return Column(children: systemsCheckBox);
+                          }
+                        }),
+                    FlatButton(
+                        child: Text("Clear"),
+                        onPressed: () {
+                          _dataDisplayBloc.checkStateFieldsNamesSink.values
+                              .forEach((sink) {
+                            sink.add(false);
+                          });
+                          _dataDisplayBloc
+                              .emitEvent(ClearFieldsNamesSelection());
+                        }),
+                  ]),
             ]),
       ),
     ));
@@ -313,60 +437,64 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.blue[300],
                                 borderRadius: BorderRadius.circular(16.0),
                                 border: Border.all(
-                                    color: Colors.blue[500], width: 2.0)),
-                            child: Row(
-                              children: <Widget>[
-                                Container(
-                                    height: 70,
-                                    width: 70,
-                                    child: trailing,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    )),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        currentDataEntry.systemName,
-                                        style: TextStyle(
-                                            fontSize: 27,
+                                    color: Colors.blue[500], width: 3.0)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: <Widget>[
+                                  Container(
+                                      height: 70,
+                                      width: 70,
+                                      child: trailing,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      )),
+                                  Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          currentDataEntry.fieldName +
+                                              ":" +
+                                              dataValue,
+                                          style: TextStyle(
+                                              fontSize: 25,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                          textAlign: TextAlign.left,
+                                        ),
+                                        Text(
+                                          currentDataEntry.systemName,
+                                          style: TextStyle(
+                                              fontSize: 21,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        Text(
+                                          currentDataEntry.deviceId +
+                                              "," +
+                                              currentDataEntry.deviceType,
+                                          style: TextStyle(
+                                            fontSize: 18,
                                             color: Colors.white,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      Text(
-                                        currentDataEntry.deviceId +
-                                            "," +
-                                            currentDataEntry.deviceType,
-                                        style: TextStyle(
-                                          fontSize: 21,
-                                          color: Colors.white,
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        DateFormat("yyyy.MM.dd  'at' HH:mm")
-                                            .format(currentDataEntry.time),
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: Colors.white,
+                                        Text(
+                                          DateFormat("yyyy.MM.dd  'at' HH:mm")
+                                              .format(currentDataEntry.time),
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            color: Colors.white,
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        currentDataEntry.fieldName +
-                                            ":" +
-                                            dataValue,
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             )));
 
                         return Card(
@@ -384,7 +512,7 @@ class _HomePageState extends State<HomePage> {
       child: SafeArea(
           child: Scaffold(
               appBar: AppBar(
-                title: Text('Home Page'),
+                title: Center(child: Text('Software for IOT')),
                 leading: Container(),
                 actions: <Widget>[
                   LogOutButton(),

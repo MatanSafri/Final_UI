@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iot_ui/data_model/DataEntry.dart';
 import 'package:iot_ui/data_model/NumberDataEntry.dart';
@@ -50,7 +48,14 @@ class DAL {
     }
 
     if (deviceTypes != null)
-      quary = quary.where("device_type", isEqualTo: deviceTypes);
+      deviceTypes.forEach((deviceType) {
+        quary = quary.where("device_type", isEqualTo: deviceType);
+      });
+
+    if (fieldsNames != null)
+      fieldsNames.forEach((fieldName) {
+        quary = quary.where("field_name", isEqualTo: fieldName);
+      });
 
     if (type != null) quary = quary.where("type", isEqualTo: type);
 

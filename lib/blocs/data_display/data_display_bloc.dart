@@ -21,11 +21,16 @@ class DataDisplayBloc
 
   @override
   void dispose() async {
-    for (var bs in _checkStateSystemNames.values) await bs?.close();
     for (var bs in _checkStateDevices.values) await bs?.close();
+    for (var bs in _checkStateDevicesTypes.values) await bs?.close();
+    for (var bs in _checkStateFieldsNames.values) await bs?.close();
+    for (var bs in _checkStateSystemNames.values) await bs?.close();
     await _currDataStreamSubscription?.cancel();
     await _systems?.close();
     await _systemsNames?.close();
+    await _systemsDevices?.close();
+    await _systemsDevicesTpyes?.close();
+    await _systemsFieldsNames?.close();
     await _systemsData?.close();
     await _endTimeDate?.close();
     await _startTimeDate?.close();
@@ -63,6 +68,38 @@ class DataDisplayBloc
   Map<String, StreamSink<bool>> get checkStateDevicesSink => _checkStateDevices
       .map<String, StreamSink<bool>>((key, value) => MapEntry(key, value.sink));
 
+  final BehaviorSubject<List<String>> _systemsDevicesTpyes =
+      BehaviorSubject<List<String>>();
+  Stream<List<String>> get systemDevicesTypesStream =>
+      _systemsDevicesTpyes.stream;
+
+  // check state systems streams
+  final Map<String, BehaviorSubject<bool>> _checkStateDevicesTypes =
+      Map<String, BehaviorSubject<bool>>();
+  Map<String, Stream<bool>> get checkStateDevicesTypesStream =>
+      _checkStateDevicesTypes.map<String, Stream<bool>>(
+          (key, value) => MapEntry(key, value.stream));
+
+  Map<String, StreamSink<bool>> get checkStateDevicesTypesSink =>
+      _checkStateDevicesTypes.map<String, StreamSink<bool>>(
+          (key, value) => MapEntry(key, value.sink));
+
+  final BehaviorSubject<List<String>> _systemsFieldsNames =
+      BehaviorSubject<List<String>>();
+  Stream<List<String>> get systemFieldsNamesStream =>
+      _systemsFieldsNames.stream;
+
+  // check state systems streams
+  final Map<String, BehaviorSubject<bool>> _checkStateFieldsNames =
+      Map<String, BehaviorSubject<bool>>();
+  Map<String, Stream<bool>> get checkStateFieldsNamesStream =>
+      _checkStateFieldsNames.map<String, Stream<bool>>(
+          (key, value) => MapEntry(key, value.stream));
+
+  Map<String, StreamSink<bool>> get checkStateFieldsNamesSink =>
+      _checkStateFieldsNames.map<String, StreamSink<bool>>(
+          (key, value) => MapEntry(key, value.sink));
+
   PublishSubject<List<DataEntry>> _systemsData =
       PublishSubject<List<DataEntry>>();
   Stream<List<DataEntry>> get systemsDataStream => _systemsData.stream;
@@ -80,6 +117,8 @@ class DataDisplayBloc
   StreamSink<DateTime> get startTimeDateSink => _startTimeDate.sink;
 
   List<String> _checkedSystemsDevices = List<String>();
+  List<String> _checkedSystemsDevicesTypes = List<String>();
+  List<String> _checkedSystemsFieldsNames = List<String>();
 
   @override
   Stream<DataDisplayState> eventHandler(
@@ -106,6 +145,16 @@ class DataDisplayBloc
             lastState.systemNames.length == 0) {
           _systemsDevices.sink.add(
               _allSystems.map((sys) => sys.devices).expand((i) => i).toList());
+
+          _systemsDevicesTpyes.sink.add(_allSystems
+              .map((sys) => sys.deviceTypes)
+              .expand((i) => i)
+              .toList());
+
+          _systemsFieldsNames.add(_allSystems
+              .map((sys) => sys.fieldNames)
+              .expand((i) => i)
+              .toList());
         } else {
           _allSystems
               .where((sys) => lastState.systemNames.contains(sys.systemName))
@@ -117,6 +166,30 @@ class DataDisplayBloc
           });
 
           _systemsDevices.sink.add(_checkedSystemsDevices.toList());
+
+          _allSystems
+              .where((sys) => lastState.systemNames.contains(sys.systemName))
+              .forEach((selectedSys) {
+            selectedSys.deviceTypes.forEach((selectedSystemsDeviceTypes) {
+              if (!_checkedSystemsDevicesTypes
+                  .contains(selectedSystemsDeviceTypes))
+                _checkedSystemsDevicesTypes.add(selectedSystemsDeviceTypes);
+            });
+          });
+
+          _systemsDevicesTpyes.sink.add(_checkedSystemsDevicesTypes.toList());
+
+          _allSystems
+              .where((sys) => lastState.systemNames.contains(sys.systemName))
+              .forEach((selectedSys) {
+            selectedSys.fieldNames.forEach((selectedSystemsFieldsNames) {
+              if (!_checkedSystemsFieldsNames
+                  .contains(selectedSystemsFieldsNames))
+                _checkedSystemsFieldsNames.add(selectedSystemsFieldsNames);
+            });
+          });
+
+          _systemsDevices.sink.add(_checkedSystemsFieldsNames.toList());
         }
       });
 
@@ -136,23 +209,62 @@ class DataDisplayBloc
         });
       });
 
+      // TODO: save and close the listener
+      _systemsDevicesTpyes.listen((onData) {
+        onData.forEach((device) {
+          _checkStateDevicesTypes.putIfAbsent(
+              device, () => BehaviorSubject<bool>());
+        });
+      });
+
+      // TODO: save and close the listener
+      _systemsFieldsNames.listen((onData) {
+        onData.forEach((device) {
+          _checkStateFieldsNames.putIfAbsent(
+              device, () => BehaviorSubject<bool>());
+        });
+      });
+
       systemsNamesStream.listen((onData) {
         onData.forEach((systemName) {
           _checkedSystemsDevices.clear();
+          _checkedSystemsDevicesTypes.clear();
+          _checkedSystemsFieldsNames.clear();
+
           var checkStream = BehaviorSubject<bool>();
           var currSystemDevices = _allSystems
               .firstWhere((sys) => sys.systemName == systemName)
               .devices;
+          var currSystemDevicesTypes = _allSystems
+              .firstWhere((sys) => sys.systemName == systemName)
+              .deviceTypes;
+          var currSystemFieldsNames = _allSystems
+              .firstWhere((sys) => sys.systemName == systemName)
+              .fieldNames;
           _checkStateSystemNames.putIfAbsent(systemName, () => checkStream);
           checkStream.listen((data) {
             if (data) {
               print("$currSystemDevices\n");
               _checkedSystemsDevices.addAll(currSystemDevices);
+              _checkedSystemsDevicesTypes.addAll(currSystemDevicesTypes);
+              _checkedSystemsFieldsNames.addAll(currSystemFieldsNames);
             } else {
               currSystemDevices.forEach((device) {
                 _checkStateDevices[device]?.close();
                 _checkStateDevices.remove(device);
                 _checkedSystemsDevices.remove(device);
+              });
+
+              currSystemDevicesTypes.forEach((devicesTypes) {
+                _checkStateDevicesTypes[devicesTypes]?.close();
+                _checkStateDevicesTypes.remove(devicesTypes);
+                _checkedSystemsDevicesTypes.remove(devicesTypes);
+              });
+
+              currSystemFieldsNames.forEach((devicesTypes) {
+                _checkStateFieldsNames[devicesTypes]?.close();
+                _checkStateFieldsNames.remove(devicesTypes);
+                _checkedSystemsFieldsNames.remove(devicesTypes);
               });
             }
           });
@@ -162,11 +274,22 @@ class DataDisplayBloc
       _systemsNames.addStream(systemsNamesStream);
     } else if (event is ChangeSystemSelection) {
       // check the current selection - systemNames didn't update yet
-      if (currentState.systemNames.length == 1 && !event.selection)
+      if (currentState.systemNames.length == 1 && !event.selection) {
         _systemsDevices.sink.add(
             _allSystems.map((sys) => sys.devices).expand((i) => i).toList());
-      else
+
+        _systemsDevicesTpyes.sink.add(_allSystems
+            .map((sys) => sys.deviceTypes)
+            .expand((i) => i)
+            .toList());
+
+        _systemsFieldsNames.sink.add(
+            _allSystems.map((sys) => sys.fieldNames).expand((i) => i).toList());
+      } else {
         _systemsDevices.sink.add(_checkedSystemsDevices);
+        _systemsDevicesTpyes.sink.add(_checkedSystemsDevicesTypes);
+        _systemsFieldsNames.sink.add(_checkedSystemsFieldsNames);
+      }
 
       if (event.selection) {
         yield DataDisplayState(
@@ -191,7 +314,7 @@ class DataDisplayBloc
       if (event.selection) {
         yield DataDisplayState(
             currentState.systemNames,
-            currentState.deviceTypes + [event.device],
+            currentState.devices + [event.device],
             currentState.deviceTypes,
             currentState.fieldNames,
             currentState.startDateTime,
@@ -204,6 +327,46 @@ class DataDisplayBloc
             update,
             currentState.deviceTypes,
             currentState.fieldNames,
+            currentState.startDateTime,
+            currentState.endDateTime);
+      }
+    } else if (event is ChangeDevicesTypesSelection) {
+      if (event.selection) {
+        yield DataDisplayState(
+            currentState.systemNames,
+            currentState.devices,
+            currentState.deviceTypes + [event.deviceType],
+            currentState.fieldNames,
+            currentState.startDateTime,
+            currentState.endDateTime);
+      } else {
+        var update = currentState.deviceTypes.toList();
+        update.remove(event.deviceType);
+        yield DataDisplayState(
+            currentState.systemNames,
+            currentState.devices,
+            update,
+            currentState.fieldNames,
+            currentState.startDateTime,
+            currentState.endDateTime);
+      }
+    } else if (event is ChangeFieldsNamesSelection) {
+      if (event.selection) {
+        yield DataDisplayState(
+            currentState.systemNames,
+            currentState.devices,
+            currentState.deviceTypes,
+            currentState.fieldNames + [event.fieldName],
+            currentState.startDateTime,
+            currentState.endDateTime);
+      } else {
+        var update = currentState.fieldNames.toList();
+        update.remove(event.fieldName);
+        yield DataDisplayState(
+            currentState.systemNames,
+            currentState.devices,
+            currentState.deviceTypes,
+            update,
             currentState.startDateTime,
             currentState.endDateTime);
       }
@@ -276,6 +439,8 @@ class DataDisplayBloc
             () => DAL
                 .getDataCollection(systemName,
                     deviceIds: currentState.devices,
+                    deviceTypes: currentState.deviceTypes,
+                    fieldsNames: currentState.fieldNames,
                     startDate: currentState.startDateTime,
                     endDate: currentState.endDateTime)
                 .transform(trans));

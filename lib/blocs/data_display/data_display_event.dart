@@ -39,6 +39,18 @@ class ChangeDevicesSelection extends DataDisplayEvent {
   ChangeDevicesSelection(this.device, this.selection);
 }
 
+class ChangeDevicesTypesSelection extends DataDisplayEvent {
+  bool selection;
+  String deviceType;
+  ChangeDevicesTypesSelection(this.deviceType, this.selection);
+}
+
+class ChangeFieldsNamesSelection extends DataDisplayEvent {
+  bool selection;
+  String fieldName;
+  ChangeFieldsNamesSelection(this.fieldName, this.selection);
+}
+
 class ChangeStartTimeDate extends DataDisplayEvent {
   DateTime startTimeDate;
   ChangeStartTimeDate(this.startTimeDate);
@@ -52,5 +64,9 @@ class ChangeEndTimeDate extends DataDisplayEvent {
 class ClearSystemsSelection extends DataDisplayEvent {}
 
 class ClearDevicesSelection extends DataDisplayEvent {}
+
+class ClearDevicesTypesSelection extends DataDisplayEvent {}
+
+class ClearFieldsNamesSelection extends DataDisplayEvent {}
 
 class ClearDatesSelection extends DataDisplayEvent {}
