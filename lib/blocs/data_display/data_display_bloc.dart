@@ -11,12 +11,7 @@ import 'package:rxdart/rxdart.dart';
 
 class DataDisplayBloc
     extends BlocEventStateBase<DataDisplayEvent, DataDisplayState> {
-  DataDisplayBloc()
-      //: super(initialState: DataDisplayState.loadingData(List<String>())) {
-      : super(initialState: DataDisplayState.init()) {
-    //emitEvent(InitDataDisplay());
-  }
-
+  DataDisplayBloc() : super(initialState: DataDisplayState.init());
   List<System> _allSystems = List<System>();
 
   @override

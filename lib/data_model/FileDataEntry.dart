@@ -1,15 +1,13 @@
-import 'dart:io';
 import 'package:iot_ui/data_model/DataEntry.dart';
-import 'package:iot_ui/data_model/System.dart';
+import 'package:iot_ui/services/DAL.dart';
 
 class FileDataEntry extends DataEntry {
-  File data;
-  Uri uri;
+  String fileName;
+  Future<dynamic> url;
 
   FileDataEntry(String deviceId, String deviceType, String system,
-      DateTime time, String type, String fieldName, this.uri,
-      {bool downloadFile = true})
+      DateTime time, String type, String fieldName, this.fileName)
       : super(deviceId, deviceType, system, time, type, fieldName) {
-    if (downloadFile) {}
+    url = DAL.getFileUrlFromStorage(fileName);
   }
 }

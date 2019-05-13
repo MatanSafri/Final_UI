@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iot_ui/data_model/DataEntry.dart';
+import 'package:iot_ui/data_model/FileDataEntry.dart';
 import 'package:iot_ui/data_model/NumberDataEntry.dart';
 import 'package:iot_ui/data_model/System.dart';
 import 'package:iot_ui/data_model/TextDataEntry.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class DAL {
   static Stream<QuerySnapshot> getSystemCollection() {
@@ -19,6 +23,13 @@ class DAL {
           d.data["field_names"].cast<String>()));
     });
     return systems;
+  }
+
+  static Future<dynamic> getFileUrlFromStorage(String fileName) {
+    //final Directory tempDir = Directory.systemTemp;
+    //final File file = File('${tempDir.path}/$fileName');
+    final StorageReference ref = FirebaseStorage.instance.ref().child(fileName);
+    return ref.getDownloadURL();
   }
 
   static Stream<QuerySnapshot> getDataCollection(String systemName,
@@ -90,6 +101,17 @@ class DAL {
                 double.parse(d.data["data"])));
             break;
           }
+        case "image":
+        case "audio":
+        case "video":
+          systemsData.add(FileDataEntry(
+              d.data["device_id"],
+              d.data["device_type"],
+              d.data["system_name"],
+              DateTime.tryParse(d.data["time"]),
+              d.data["type"],
+              d.data["field_name"],
+              d.data["data"]));
       }
     });
     return systemsData;
