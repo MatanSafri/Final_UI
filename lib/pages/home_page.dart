@@ -47,8 +47,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     var children = <Widget>[];
-    children.add(Expanded(
-      flex: 4,
+    children.add(ConstrainedBox(
+      constraints: BoxConstraints(
+        //minHeight: 5.0,
+        // minWidth: 5.0,
+        maxHeight: 0.5 * MediaQuery.of(context).size.height,
+        //maxWidth: 30.0,
+      ),
       child: SingleChildScrollView(
         child: ExpansionTile(
             title: Center(child: Text("Filtering Options")),
@@ -380,25 +385,21 @@ class _HomePageState extends State<HomePage> {
       ),
     ));
 
-    children.add(Flexible(
-      flex: 1,
-      child: MaterialButton(
-          elevation: 5.0,
-          minWidth: 200.0,
-          height: 42.0,
-          color: Colors.blue,
-          child: Text("Get Data",
-              style: TextStyle(fontSize: 20.0, color: Colors.white)),
-          onPressed: () {
-            //print("my checked systems $checkedSystems\n");
-            _dataDisplayBloc.emitEvent(DisplayData());
-          }),
-    ));
+    children.add(MaterialButton(
+        elevation: 5.0,
+        minWidth: 200.0,
+        height: 42.0,
+        color: Colors.blue,
+        child: Text("Get Data",
+            style: TextStyle(fontSize: 20.0, color: Colors.white)),
+        onPressed: () {
+          //print("my checked systems $checkedSystems\n");
+          _dataDisplayBloc.emitEvent(DisplayData());
+        }));
 
     //children.add(ListView(shrinkWrap: true, children: getDataChildrens));
 
     children.add(Expanded(
-      flex: 8,
       child: BlocEventStateBuilder<DataDisplayEvent, DataDisplayState>(
           bloc: _dataDisplayBloc,
           builder: (BuildContext context, DataDisplayState state) {
@@ -456,13 +457,16 @@ class _HomePageState extends State<HomePage> {
                         }
 
                         var children3 = <Widget>[
-                          Text(
-                            currentDataEntry.fieldName + ":" + dataValue,
-                            style: TextStyle(
-                                fontSize: 23,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.left,
+                          Container(
+                            child: Text(
+                              currentDataEntry.fieldName + ":" + dataValue,
+                              maxLines: 3,
+                              style: TextStyle(
+                                  fontSize: 26,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.left,
+                            ),
                           ),
                         ];
 
@@ -611,7 +615,7 @@ class _HomePageState extends State<HomePage> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
                                   Container(
                                       height: 70,
