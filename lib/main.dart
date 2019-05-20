@@ -5,6 +5,7 @@ import 'package:iot_ui/pages/add_data_page.dart';
 import 'package:iot_ui/pages/decision_page.dart';
 import 'package:iot_ui/pages/home_page.dart';
 import 'package:iot_ui/pages/initialization_page.dart';
+import 'package:iot_ui/widgets/maps.dart';
 
 void main() => runApp(new MyApp());
 
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.blue,
           ),
-          home: InitializationPage(), //AddDataPage(),
+          home: InitializationPage(), //InitializationPage(), //AddDataPage(),
           routes: {
             '/decision': (BuildContext context) => DecisionPage(),
             '/homepage': (BuildContext context) => HomePage(),

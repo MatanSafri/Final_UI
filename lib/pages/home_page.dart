@@ -9,6 +9,7 @@ import 'package:iot_ui/data_model/FileDataEntry.dart';
 import 'package:iot_ui/data_model/NumberDataEntry.dart';
 import 'package:iot_ui/data_model/TextDataEntry.dart';
 import 'package:iot_ui/widgets/logout_button.dart';
+import 'package:iot_ui/widgets/maps.dart';
 import 'package:iot_ui/widgets/pending_action.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:intl/intl.dart';
@@ -454,7 +455,7 @@ class _HomePageState extends State<HomePage> {
                           dataValue = currentDataEntry.fileName;
                         }
 
-                        var children2 = <Widget>[
+                        var children3 = <Widget>[
                           Text(
                             currentDataEntry.fieldName + ":" + dataValue,
                             style: TextStyle(
@@ -462,6 +463,21 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
                             textAlign: TextAlign.left,
+                          ),
+                        ];
+
+                        if (currentDataEntry.location != null) {
+                          children3.add(MaterialButton(
+                            child: Container(
+                                height: 50, width: 50, child: Icon(Icons.map)),
+                            onPressed: () {
+                              _buildMapsDialog(context, currentDataEntry);
+                            },
+                          ));
+                        }
+                        var children2 = <Widget>[
+                          Row(
+                            children: children3,
                           ),
                           Text(
                             currentDataEntry.systemName,
@@ -664,5 +680,32 @@ class _HomePageState extends State<HomePage> {
         ),
       ],
     );
+  }
+
+  Widget _buildMapsDialog(BuildContext context, DataEntry dataEntry) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              title: Center(child: Text(dataEntry.deviceId)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                      height: 300,
+                      width: 300,
+                      child: Maps(dataEntry: dataEntry)),
+                ],
+              ),
+              actions: <Widget>[
+                FlatButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  textColor: Theme.of(context).primaryColor,
+                  child: const Text('Go back'),
+                ),
+              ],
+            ));
   }
 }

@@ -7,6 +7,7 @@ import 'package:iot_ui/data_model/NumberDataEntry.dart';
 import 'package:iot_ui/data_model/System.dart';
 import 'package:iot_ui/data_model/TextDataEntry.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:tuple/tuple.dart';
 
 class DAL {
   static Stream<QuerySnapshot> getSystemCollection() {
@@ -76,6 +77,18 @@ class DAL {
   static List<DataEntry> getSystemDataFromQuery(QuerySnapshot collection) {
     var systemsData = List<DataEntry>();
     collection.documents.forEach((d) {
+      Tuple2<double, double> location;
+
+      if (d.data.containsKey("location")) {
+        try {
+          List<String> stringLoc = d.data["location"].split(",");
+          location = Tuple2<double, double>(
+              double.parse(stringLoc.first), double.parse(stringLoc.last));
+        } catch (e) {
+          print("${e.toString()}\n");
+        }
+      }
+
       switch (d.data["type"].toString().toLowerCase()) {
         case "text":
           {
@@ -86,6 +99,7 @@ class DAL {
                 DateTime.tryParse(d.data["time"]),
                 d.data["type"],
                 d.data["field_name"],
+                location,
                 d.data["data"]));
             break;
           }
@@ -98,6 +112,7 @@ class DAL {
                 DateTime.tryParse(d.data["time"]),
                 d.data["type"],
                 d.data["field_name"],
+                location,
                 double.parse(d.data["data"])));
             break;
           }
@@ -111,6 +126,7 @@ class DAL {
               DateTime.tryParse(d.data["time"]),
               d.data["type"],
               d.data["field_name"],
+              location,
               d.data["data"]));
       }
     });
