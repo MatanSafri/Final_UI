@@ -5,17 +5,11 @@ import 'package:iot_ui/blocs/data_display/data_display_bloc.dart';
 import 'package:iot_ui/blocs/data_display/data_display_event.dart';
 import 'package:iot_ui/blocs/data_display/data_display_state.dart';
 import 'package:iot_ui/data_model/DataEntry.dart';
-import 'package:iot_ui/data_model/FileDataEntry.dart';
-import 'package:iot_ui/data_model/NumberDataEntry.dart';
-import 'package:iot_ui/data_model/TextDataEntry.dart';
+import 'package:iot_ui/widgets/dataEntry_card.dart';
 import 'package:iot_ui/widgets/logout_button.dart';
-import 'package:iot_ui/widgets/maps.dart';
 import 'package:iot_ui/widgets/pending_action.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:iot_ui/widgets/video_widget.dart';
-import 'package:video_player/video_player.dart';
-import 'package:iot_ui/widgets/player_widget.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -49,10 +43,7 @@ class _HomePageState extends State<HomePage> {
     var children = <Widget>[];
     children.add(ConstrainedBox(
       constraints: BoxConstraints(
-        //minHeight: 5.0,
-        // minWidth: 5.0,
         maxHeight: 0.5 * MediaQuery.of(context).size.height,
-        //maxWidth: 30.0,
       ),
       child: SingleChildScrollView(
         child: ExpansionTile(
@@ -416,232 +407,7 @@ class _HomePageState extends State<HomePage> {
                       shrinkWrap: true,
                       itemCount: snapshot.data.length,
                       itemBuilder: (BuildContext context, index) {
-                        var currentDataEntry = snapshot.data[index];
-                        var dataEntryWidgets = <Widget>[];
-                        Widget trailing;
-                        String dataValue;
-
-                        if (currentDataEntry is TextDataEntry) {
-                          trailing = Icon(
-                            const IconData(57560, fontFamily: 'MaterialIcons'),
-                            size: 40,
-                          );
-                          dataValue = currentDataEntry.data;
-                        } else if (currentDataEntry is NumberDataEntry) {
-                          trailing = Icon(
-                            const IconData(57922, fontFamily: 'MaterialIcons'),
-                            size: 40,
-                          );
-                          dataValue = currentDataEntry.data.toString();
-                        } else if (currentDataEntry is FileDataEntry) {
-                          if (currentDataEntry.type.toLowerCase() == "image") {
-                            trailing = Icon(
-                              const IconData(58356,
-                                  fontFamily: 'MaterialIcons'),
-                              size: 40,
-                            );
-                          } else if (currentDataEntry.type.toLowerCase() ==
-                              "audio") {
-                            trailing = Icon(
-                                const IconData(58273,
-                                    fontFamily: 'MaterialIcons'),
-                                size: 40);
-                          } else if (currentDataEntry.type.toLowerCase() ==
-                              "video") {
-                            trailing = Icon(
-                                const IconData(57419,
-                                    fontFamily: 'MaterialIcons'),
-                                size: 40);
-                          }
-                          dataValue = currentDataEntry.fileName;
-                        }
-
-                        var children3 = <Widget>[
-                          Container(
-                            child: Text(
-                              currentDataEntry.fieldName + ":" + dataValue,
-                              maxLines: 3,
-                              style: TextStyle(
-                                  fontSize: 26,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.left,
-                            ),
-                          ),
-                        ];
-
-                        if (currentDataEntry.location != null) {
-                          children3.add(MaterialButton(
-                            child: Container(
-                                height: 50, width: 50, child: Icon(Icons.map)),
-                            onPressed: () {
-                              _buildMapsDialog(context, currentDataEntry);
-                            },
-                          ));
-                        }
-                        var children2 = <Widget>[
-                          Row(
-                            children: children3,
-                          ),
-                          Text(
-                            currentDataEntry.systemName,
-                            style: TextStyle(
-                                fontSize: 21,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            currentDataEntry.deviceId +
-                                "," +
-                                currentDataEntry.deviceType,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            DateFormat("yyyy.MM.dd  'at' HH:mm")
-                                .format(currentDataEntry.time),
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ];
-
-                        if (currentDataEntry is FileDataEntry) {
-                          if (currentDataEntry.type.toLowerCase() == "image") {
-                            Widget imageWidget;
-                            children2.add(MaterialButton(
-                              child: Container(
-                                  height: 100,
-                                  width: 100,
-                                  child: FutureBuilder<dynamic>(
-                                      future: currentDataEntry.url,
-                                      builder: (BuildContext context,
-                                          AsyncSnapshot<dynamic> snapshot) {
-                                        switch (snapshot.connectionState) {
-                                          case ConnectionState.none:
-                                            return PendingAction();
-                                          case ConnectionState.active:
-                                          case ConnectionState.waiting:
-                                            return PendingAction();
-                                          case ConnectionState.done:
-                                            if (snapshot.hasError)
-                                              return Text(
-                                                  'Error: ${snapshot.error}');
-                                            imageWidget =
-                                                Image.network(snapshot.data);
-                                            return imageWidget;
-                                        }
-                                      })),
-                              onPressed: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        _buildImageDialog(
-                                            context,
-                                            currentDataEntry.fileName,
-                                            imageWidget));
-                              },
-                            ));
-                          } else if (currentDataEntry.type.toLowerCase() ==
-                              "audio") {
-                            children2.add(Container(
-                                height: 140,
-                                width: 200,
-                                child: FutureBuilder<dynamic>(
-                                    future: currentDataEntry.url,
-                                    builder: (BuildContext context,
-                                        AsyncSnapshot<dynamic> snapshot) {
-                                      switch (snapshot.connectionState) {
-                                        case ConnectionState.none:
-                                          return PendingAction();
-                                        case ConnectionState.active:
-                                        case ConnectionState.waiting:
-                                          return PendingAction();
-                                        case ConnectionState.done:
-                                          if (snapshot.hasError)
-                                            return Text(
-                                                'Error: ${snapshot.error}');
-                                          return PlayerWidget(
-                                              url: snapshot.data);
-                                      }
-                                    })));
-                          } else if (currentDataEntry.type.toLowerCase() ==
-                              "video") {
-                            Widget videoWidget;
-                            children2.add(MaterialButton(
-                              child: Container(
-                                  height: 130,
-                                  width: 100,
-                                  child: FutureBuilder<dynamic>(
-                                      future: currentDataEntry.url,
-                                      builder: (BuildContext context,
-                                          AsyncSnapshot<dynamic> snapshot) {
-                                        switch (snapshot.connectionState) {
-                                          case ConnectionState.none:
-                                            return PendingAction();
-                                          case ConnectionState.active:
-                                          case ConnectionState.waiting:
-                                            return PendingAction();
-                                          case ConnectionState.done:
-                                            if (snapshot.hasError)
-                                              return Text(
-                                                  'Error: ${snapshot.error}');
-                                            videoWidget =
-                                                VideoWidget(url: snapshot.data);
-                                            return videoWidget;
-                                        }
-                                      })),
-                              onPressed: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        _buildImageDialog(
-                                            context,
-                                            currentDataEntry.fileName,
-                                            videoWidget));
-                              },
-                            ));
-                          }
-                        }
-                        dataEntryWidgets.add(Container(
-                            decoration: BoxDecoration(
-                                color: Colors.blue[300],
-                                borderRadius: BorderRadius.circular(16.0),
-                                border: Border.all(
-                                    color: Colors.blue[500], width: 3.0)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: <Widget>[
-                                  Container(
-                                      height: 70,
-                                      width: 70,
-                                      child: trailing,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                      )),
-                                  Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: children2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )));
-
-                        return Card(
-                          child: Column(
-                            children: dataEntryWidgets,
-                          ),
-                        );
+                        return DataEntryCard(dataEntry: snapshot.data[index]);
                       });
                 });
           }),
@@ -663,53 +429,5 @@ class _HomePageState extends State<HomePage> {
                 child: Column(children: children),
               ))),
     );
-  }
-
-  Widget _buildImageDialog(
-      BuildContext context, String imageName, Widget imageWidget) {
-    return AlertDialog(
-      title: Center(child: Text(imageName)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[imageWidget],
-      ),
-      actions: <Widget>[
-        FlatButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          textColor: Theme.of(context).primaryColor,
-          child: const Text('Go back'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMapsDialog(BuildContext context, DataEntry dataEntry) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) => AlertDialog(
-              title: Center(child: Text(dataEntry.deviceId)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                      height: 300,
-                      width: 300,
-                      child: Maps(dataEntry: dataEntry)),
-                ],
-              ),
-              actions: <Widget>[
-                FlatButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  textColor: Theme.of(context).primaryColor,
-                  child: const Text('Go back'),
-                ),
-              ],
-            ));
   }
 }
