@@ -414,6 +414,8 @@ class _HomePageState extends State<HomePage> {
     ));
 
     children.add(MaterialButton(
+        shape: new RoundedRectangleBorder(
+            borderRadius: new BorderRadius.circular(30.0)),
         elevation: 5.0,
         minWidth: 200.0,
         height: 42.0,
@@ -440,17 +442,54 @@ class _HomePageState extends State<HomePage> {
                   else if (snapshot.connectionState == ConnectionState.waiting)
                     return Container();
                   if (!snapshot.hasData) return Container();
+
+                  return DefaultTabController(
+                    length: 2,
+                    child: Scaffold(
+                      appBar: PreferredSize(
+                        preferredSize: Size.fromHeight(50.0), // here the
+                        child: AppBar(
+                          shape: new RoundedRectangleBorder(
+                              borderRadius: new BorderRadius.circular(30.0)),
+                          automaticallyImplyLeading: false,
+                          bottom: TabBar(
+                            tabs: [
+                              Tab(icon: Icon(Icons.list)),
+                              Tab(icon: Icon(Icons.insert_chart)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      body: TabBarView(
+                        children: [
+                          ListView.builder(
+                              shrinkWrap: false,
+                              itemCount: snapshot.data.length,
+                              itemBuilder: (BuildContext context, index) {
+                                return DataEntryCard(
+                                    dataEntry: snapshot.data[index]);
+                              }),
+                          ListView(
+                            children: <Widget>[
+                              ChartsPage(dataEntries: snapshot.data),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+
                   // return ListView.builder(
                   //     shrinkWrap: false,
                   //     itemCount: snapshot.data.length,
                   //     itemBuilder: (BuildContext context, index) {
                   //       return DataEntryCard(dataEntry: snapshot.data[index]);
                   //     });
-                  return ListView(
-                    children: <Widget>[
-                      ChartsPage(dataEntries: snapshot.data),
-                    ],
-                  );
+                  // return ListView(
+                  //   children: <Widget>[
+                  //     ChartsPage(dataEntries: snapshot.data),
+                  //   ],
+                  // );
                 });
           }),
     ));
