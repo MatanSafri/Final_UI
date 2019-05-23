@@ -39,7 +39,7 @@ class DAL {
       List<String> deviceIds,
       List<String> deviceTypes,
       List<String> fieldsNames,
-      String type}) {
+      List<String> dataTypes}) {
     var collection = Firestore.instance
         .collection('systems')
         .document(systemName)
@@ -69,7 +69,11 @@ class DAL {
         quary = quary.where("field_name", isEqualTo: fieldName);
       });
 
-    if (type != null) quary = quary.where("type", isEqualTo: type);
+    print("bala: $dataTypes\n");
+    if (dataTypes != null)
+      dataTypes.forEach((dataType) {
+        quary = quary.where("type", isEqualTo: dataType);
+      });
 
     return quary.snapshots();
   }
@@ -97,7 +101,7 @@ class DAL {
                 d.data["device_type"],
                 d.data["system_name"],
                 DateTime.tryParse(d.data["time"]),
-                d.data["type"],
+                DataEntry.getDataEntryType(d.data["type"]),
                 d.data["field_name"],
                 location,
                 d.data["data"]));
@@ -110,7 +114,7 @@ class DAL {
                 d.data["device_type"],
                 d.data["system_name"],
                 DateTime.tryParse(d.data["time"]),
-                d.data["type"],
+                DataEntry.getDataEntryType(d.data["type"]),
                 d.data["field_name"],
                 location,
                 double.parse(d.data["data"])));
@@ -124,7 +128,7 @@ class DAL {
               d.data["device_type"],
               d.data["system_name"],
               DateTime.tryParse(d.data["time"]),
-              d.data["type"],
+              DataEntry.getDataEntryType(d.data["type"]),
               d.data["field_name"],
               location,
               d.data["data"]));

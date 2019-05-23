@@ -20,6 +20,7 @@ class DataDisplayBloc
     for (var bs in _checkStateDevicesTypes.values) await bs?.close();
     for (var bs in _checkStateFieldsNames.values) await bs?.close();
     for (var bs in _checkStateSystemNames.values) await bs?.close();
+    for (var bs in _checkStateDataTypes.values) await bs?.close();
     await _currDataStreamSubscription?.cancel();
     await _systems?.close();
     await _systemsNames?.close();
@@ -30,6 +31,16 @@ class DataDisplayBloc
     await _endTimeDate?.close();
     await _startTimeDate?.close();
   }
+
+  final Map<String, BehaviorSubject<bool>> _checkStateDataTypes =
+      Map<String, BehaviorSubject<bool>>();
+  Map<String, Stream<bool>> get checkStateDataTypesStream =>
+      _checkStateDataTypes.map<String, Stream<bool>>(
+          (key, value) => MapEntry(key, value.stream));
+
+  Map<String, StreamSink<bool>> get checkStateDataTypesSink =>
+      _checkStateDataTypes.map<String, StreamSink<bool>>(
+          (key, value) => MapEntry(key, value.sink));
 
   final BehaviorSubject<List<System>> _systems =
       BehaviorSubject<List<System>>();
@@ -128,6 +139,11 @@ class DataDisplayBloc
         _allSystems.addAll(systems);
         sink.add(systems);
       }));
+
+      DataEntryType.values.forEach((type) {
+        _checkStateDataTypes.putIfAbsent(
+            type.toString().split(".").last, () => BehaviorSubject<bool>());
+      });
 
       // listen to systems stream to update devices
       systemsStream.listen((data) {
@@ -292,6 +308,7 @@ class DataDisplayBloc
             currentState.devices,
             currentState.deviceTypes,
             currentState.fieldNames,
+            currentState.dataTypes,
             currentState.startDateTime,
             currentState.endDateTime);
       } else {
@@ -302,6 +319,7 @@ class DataDisplayBloc
             currentState.devices,
             currentState.deviceTypes,
             currentState.fieldNames,
+            currentState.dataTypes,
             currentState.startDateTime,
             currentState.endDateTime);
       }
@@ -312,6 +330,7 @@ class DataDisplayBloc
             currentState.devices + [event.device],
             currentState.deviceTypes,
             currentState.fieldNames,
+            currentState.dataTypes,
             currentState.startDateTime,
             currentState.endDateTime);
       } else {
@@ -322,6 +341,7 @@ class DataDisplayBloc
             update,
             currentState.deviceTypes,
             currentState.fieldNames,
+            currentState.dataTypes,
             currentState.startDateTime,
             currentState.endDateTime);
       }
@@ -332,6 +352,7 @@ class DataDisplayBloc
             currentState.devices,
             currentState.deviceTypes + [event.deviceType],
             currentState.fieldNames,
+            currentState.dataTypes,
             currentState.startDateTime,
             currentState.endDateTime);
       } else {
@@ -342,6 +363,7 @@ class DataDisplayBloc
             currentState.devices,
             update,
             currentState.fieldNames,
+            currentState.dataTypes,
             currentState.startDateTime,
             currentState.endDateTime);
       }
@@ -352,6 +374,7 @@ class DataDisplayBloc
             currentState.devices,
             currentState.deviceTypes,
             currentState.fieldNames + [event.fieldName],
+            currentState.dataTypes,
             currentState.startDateTime,
             currentState.endDateTime);
       } else {
@@ -362,6 +385,29 @@ class DataDisplayBloc
             currentState.devices,
             currentState.deviceTypes,
             update,
+            currentState.dataTypes,
+            currentState.startDateTime,
+            currentState.endDateTime);
+      }
+    } else if (event is ChangeDataTypeSelection) {
+      if (event.selection) {
+        yield DataDisplayState(
+            currentState.systemNames,
+            currentState.devices,
+            currentState.deviceTypes,
+            currentState.fieldNames,
+            currentState.dataTypes + [event.dataType],
+            currentState.startDateTime,
+            currentState.endDateTime);
+      } else {
+        var update = currentState.dataTypes.toList();
+        update.remove(event.dataType);
+        yield DataDisplayState(
+            currentState.systemNames,
+            currentState.devices,
+            currentState.deviceTypes,
+            currentState.fieldNames,
+            update,
             currentState.startDateTime,
             currentState.endDateTime);
       }
@@ -371,6 +417,7 @@ class DataDisplayBloc
           currentState.devices,
           currentState.deviceTypes,
           currentState.fieldNames,
+          currentState.dataTypes,
           event.startTimeDate,
           currentState.endDateTime);
     } else if (event is ChangeEndTimeDate) {
@@ -379,17 +426,25 @@ class DataDisplayBloc
           currentState.devices,
           currentState.deviceTypes,
           currentState.fieldNames,
+          currentState.dataTypes,
           currentState.startDateTime,
           event.endTimeDate);
     } else if (event is ClearDatesSelection) {
-      yield DataDisplayState(currentState.systemNames, currentState.devices,
-          currentState.deviceTypes, currentState.fieldNames, null, null);
+      yield DataDisplayState(
+          currentState.systemNames,
+          currentState.devices,
+          currentState.deviceTypes,
+          currentState.fieldNames,
+          currentState.dataTypes,
+          null,
+          null);
     } else if (event is ClearSystemsSelection) {
       yield DataDisplayState(
           List<String>(),
           currentState.devices,
           currentState.deviceTypes,
           currentState.fieldNames,
+          currentState.dataTypes,
           currentState.startDateTime,
           currentState.endDateTime);
     } else if (event is ClearDevicesSelection) {
@@ -398,6 +453,16 @@ class DataDisplayBloc
           List<String>(),
           currentState.deviceTypes,
           currentState.fieldNames,
+          currentState.dataTypes,
+          currentState.startDateTime,
+          currentState.endDateTime);
+    } else if (event is ClearDataTypesSelection) {
+      yield DataDisplayState(
+          currentState.systemNames,
+          currentState.devices,
+          currentState.deviceTypes,
+          currentState.fieldNames,
+          List<String>(),
           currentState.startDateTime,
           currentState.endDateTime);
     } else if (event is DisplayData) {
@@ -423,6 +488,7 @@ class DataDisplayBloc
       StreamTransformer trans =
           StreamTransformer<QuerySnapshot, List<DataEntry>>.fromHandlers(
               handleData: handleData);
+
       var querySystems = currentState.systemNames.length > 0
           ? currentState.systemNames
           : _allSystems.map((sys) => sys.systemName).toList();
@@ -436,6 +502,7 @@ class DataDisplayBloc
                     deviceIds: currentState.devices,
                     deviceTypes: currentState.deviceTypes,
                     fieldsNames: currentState.fieldNames,
+                    dataTypes: currentState.dataTypes,
                     startDate: currentState.startDateTime,
                     endDate: currentState.endDateTime)
                 .transform(trans));
@@ -459,6 +526,7 @@ class DataDisplayBloc
           currentState.devices,
           currentState.deviceTypes,
           currentState.fieldNames,
+          currentState.dataTypes,
           currentState.startDateTime,
           currentState.endDateTime);
     }

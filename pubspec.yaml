@@ -32,6 +32,7 @@ dependencies:
   video_player: ^0.10.0+8
   google_maps_flutter: ^0.5.13
   tuple: ^1.0.2
+  charts_flutter: ^0.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

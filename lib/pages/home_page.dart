@@ -5,6 +5,7 @@ import 'package:iot_ui/blocs/data_display/data_display_bloc.dart';
 import 'package:iot_ui/blocs/data_display/data_display_event.dart';
 import 'package:iot_ui/blocs/data_display/data_display_state.dart';
 import 'package:iot_ui/data_model/DataEntry.dart';
+import 'package:iot_ui/pages/charts_page_page.dart';
 import 'package:iot_ui/widgets/dataEntry_card.dart';
 import 'package:iot_ui/widgets/logout_button.dart';
 import 'package:iot_ui/widgets/pending_action.dart';
@@ -41,9 +42,42 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     var children = <Widget>[];
+
+    List<Widget> dataTypesCheckBox = DataEntryType.values.map((type) {
+      String dataType = type.toString().split(".").last;
+      return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(dataType),
+            StreamBuilder<bool>(
+                stream: _dataDisplayBloc.checkStateDataTypesStream[dataType],
+                initialData: false,
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  if (snapshot.hasError) return new Text('${snapshot.error}');
+                  return Checkbox(
+                      value: snapshot.data,
+                      onChanged: (value) {
+                        _dataDisplayBloc.checkStateDataTypesSink[dataType]
+                            .add(value);
+                        _dataDisplayBloc.emitEvent(
+                            ChangeDataTypeSelection(dataType, value));
+                      });
+                })
+          ]);
+    }).toList();
+
+    // dataTypesCheckBox.add(FlatButton(
+    //     child: Text("Clear"),
+    //     onPressed: () {
+    //       _dataDisplayBloc.checkStateDataTypesSink.values.forEach((sink) {
+    //         sink.add(false);
+    //       });
+    //       _dataDisplayBloc.emitEvent(ClearDataTypesSelection());
+    //     }));
+
     children.add(ConstrainedBox(
       constraints: BoxConstraints(
-        maxHeight: 0.5 * MediaQuery.of(context).size.height,
+        maxHeight: 0.765 * MediaQuery.of(context).size.height,
       ),
       child: SingleChildScrollView(
         child: ExpansionTile(
@@ -189,6 +223,9 @@ class _HomePageState extends State<HomePage> {
                           _dataDisplayBloc.emitEvent(ClearDatesSelection());
                         }),
                   ]),
+              ExpansionTile(
+                  title: Center(child: Text("Data Types")),
+                  children: dataTypesCheckBox),
               ExpansionTile(
                   title: Center(child: Text("Devices")),
                   children: <Widget>[
@@ -403,12 +440,17 @@ class _HomePageState extends State<HomePage> {
                   else if (snapshot.connectionState == ConnectionState.waiting)
                     return Container();
                   if (!snapshot.hasData) return Container();
-                  return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: snapshot.data.length,
-                      itemBuilder: (BuildContext context, index) {
-                        return DataEntryCard(dataEntry: snapshot.data[index]);
-                      });
+                  // return ListView.builder(
+                  //     shrinkWrap: false,
+                  //     itemCount: snapshot.data.length,
+                  //     itemBuilder: (BuildContext context, index) {
+                  //       return DataEntryCard(dataEntry: snapshot.data[index]);
+                  //     });
+                  return ListView(
+                    children: <Widget>[
+                      ChartsPage(dataEntries: snapshot.data),
+                    ],
+                  );
                 });
           }),
     ));

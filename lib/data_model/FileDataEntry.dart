@@ -11,7 +11,7 @@ class FileDataEntry extends DataEntry {
       String deviceType,
       String system,
       DateTime time,
-      String type,
+      DataEntryType type,
       String fieldName,
       Tuple2<double, double> location,
       this.fileName)

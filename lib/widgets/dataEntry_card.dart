@@ -31,18 +31,18 @@ class DataEntryCard extends StatelessWidget {
           ),
           currentDataEntry.data.toString());
     } else if (currentDataEntry is FileDataEntry) {
-      if (currentDataEntry.type.toLowerCase() == "image") {
+      if (currentDataEntry.type == DataEntryType.image) {
         return Tuple2<Widget, String>(
             Icon(
               const IconData(58356, fontFamily: 'MaterialIcons'),
               size: 40,
             ),
             currentDataEntry.fileName);
-      } else if (currentDataEntry.type.toLowerCase() == "audio") {
+      } else if (currentDataEntry.type == DataEntryType.audio) {
         return Tuple2<Widget, String>(
             Icon(const IconData(58273, fontFamily: 'MaterialIcons'), size: 40),
             currentDataEntry.fileName);
-      } else if (currentDataEntry.type.toLowerCase() == "video") {
+      } else if (currentDataEntry.type == DataEntryType.video) {
         return Tuple2<Widget, String>(
             Icon(const IconData(57419, fontFamily: 'MaterialIcons'), size: 40),
             currentDataEntry.fileName);
@@ -60,7 +60,7 @@ class DataEntryCard extends StatelessWidget {
 
     var children3 = <Widget>[
       Container(
-        width: 0.4 * MediaQuery.of(context).size.width,
+        width: 0.5 * MediaQuery.of(context).size.width,
         child: Text(
           currentDataEntry.fieldName + ":" + dataValue,
           style: TextStyle(
@@ -70,11 +70,14 @@ class DataEntryCard extends StatelessWidget {
     ];
 
     if (currentDataEntry.location != null) {
-      children3.add(MaterialButton(
-        child: Icon(Icons.map),
-        onPressed: () {
-          _buildMapsDialog(context, currentDataEntry);
-        },
+      children3.add(Container(
+        width: 10,
+        child: MaterialButton(
+          child: Icon(Icons.map),
+          onPressed: () {
+            _buildMapsDialog(context, currentDataEntry);
+          },
+        ),
       ));
     }
     var children2 = <Widget>[
@@ -83,12 +86,18 @@ class DataEntryCard extends StatelessWidget {
         children: children3,
       ),
       Text(
-        currentDataEntry.systemName,
-        style: TextStyle(
-            fontSize: 21, color: Colors.white, fontWeight: FontWeight.bold),
+        "System: " + currentDataEntry.systemName,
+        style: TextStyle(fontSize: 21, color: Colors.white),
       ),
       Text(
-        currentDataEntry.deviceId + "," + currentDataEntry.deviceType,
+        "Device Id: " + currentDataEntry.deviceId,
+        style: TextStyle(
+          fontSize: 18,
+          color: Colors.white,
+        ),
+      ),
+      Text(
+        "Device type: " + currentDataEntry.deviceType,
         style: TextStyle(
           fontSize: 18,
           color: Colors.white,
@@ -104,7 +113,7 @@ class DataEntryCard extends StatelessWidget {
     ];
 
     if (currentDataEntry is FileDataEntry) {
-      if (currentDataEntry.type.toLowerCase() == "image") {
+      if (currentDataEntry.type == DataEntryType.image) {
         Widget imageWidget;
         children2.add(MaterialButton(
           child: Container(
@@ -134,7 +143,7 @@ class DataEntryCard extends StatelessWidget {
                     context, currentDataEntry.fileName, imageWidget));
           },
         ));
-      } else if (currentDataEntry.type.toLowerCase() == "audio") {
+      } else if (currentDataEntry.type == DataEntryType.audio) {
         children2.add(Container(
             height: 100,
             width: 200,
@@ -154,7 +163,7 @@ class DataEntryCard extends StatelessWidget {
                       return PlayerWidget(url: snapshot.data);
                   }
                 })));
-      } else if (currentDataEntry.type.toLowerCase() == "video") {
+      } else if (currentDataEntry.type == DataEntryType.video) {
         Widget videoWidget;
         children2.add(MaterialButton(
           child: Container(
