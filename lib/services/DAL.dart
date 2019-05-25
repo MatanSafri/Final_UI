@@ -69,7 +69,6 @@ class DAL {
         quary = quary.where("field_name", isEqualTo: fieldName);
       });
 
-    print("bala: $dataTypes\n");
     if (dataTypes != null)
       dataTypes.forEach((dataType) {
         quary = quary.where("type", isEqualTo: dataType);
