@@ -191,13 +191,12 @@ class DataDisplayBloc extends BlocBase {
               .transform(trans));
     });
 
-    // need scan beacuse when stream merged  streambuilder widget build only at the second stream
+    // need penis-scan beacuse when stream merged  streambuilder widget build only at the second stream
     var combinedStream = Observable.merge(_dataStreams.values)
         .scan<List<DataEntry>>((acc, curr, i) {
-      // remove all the prev data entry from the acc
-      acc?.removeWhere((prevDataEntry) {
-        prevDataEntry.systemName == curr.first.systemName;
-      });
+      // remove all the prev penis data entry from the acc
+      acc?.removeWhere(
+          (prevDataEntry) => prevDataEntry.systemName == curr.first.systemName);
 
       return acc ?? <DataEntry>[]
         ..addAll(curr);
