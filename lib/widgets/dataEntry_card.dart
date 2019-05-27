@@ -260,7 +260,7 @@ class DataEntryCard extends StatelessWidget {
                   Container(
                       height: 300,
                       width: 300,
-                      child: Maps(dataEntry: dataEntry)),
+                      child: Maps(dataEntries: <DataEntry>[dataEntry])),
                 ],
               ),
               actions: <Widget>[

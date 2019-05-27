@@ -7,6 +7,7 @@ import 'package:iot_ui/widgets/dataEntry_card.dart';
 import 'package:iot_ui/widgets/dates_filtering.dart';
 import 'package:iot_ui/widgets/filtering.dart';
 import 'package:iot_ui/widgets/logout_button.dart';
+import 'package:iot_ui/widgets/maps.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage> {
     var children = <Widget>[];
     children.add(ConstrainedBox(
       constraints: BoxConstraints(
-        maxHeight: 0.765 * MediaQuery.of(context).size.height,
+        maxHeight: 0.75 * MediaQuery.of(context).size.height,
       ),
       child: SingleChildScrollView(
         child: ExpansionTile(
@@ -104,7 +105,7 @@ class _HomePageState extends State<HomePage> {
             if (!snapshot.hasData) return Container();
 
             return DefaultTabController(
-              length: 2,
+              length: 3,
               child: Scaffold(
                 appBar: PreferredSize(
                   preferredSize: Size.fromHeight(50.0),
@@ -116,6 +117,7 @@ class _HomePageState extends State<HomePage> {
                       tabs: [
                         Tab(icon: Icon(Icons.list)),
                         Tab(icon: Icon(Icons.insert_chart)),
+                        Tab(icon: Icon(Icons.map)),
                       ],
                     ),
                   ),
@@ -132,7 +134,17 @@ class _HomePageState extends State<HomePage> {
                       children: <Widget>[
                         ChartsPage(dataEntries: snapshot.data),
                       ],
-                    )
+                    ),
+                    ListView(children: <Widget>[
+                      Container(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: Maps(
+                            dataEntries: snapshot.data
+                                .where(
+                                    (dataEntry) => dataEntry.location != null)
+                                .toList()),
+                      ),
+                    ]),
                   ],
                 ),
               ),

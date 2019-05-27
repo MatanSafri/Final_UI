@@ -5,58 +5,49 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iot_ui/data_model/DataEntry.dart';
 
 class Maps extends StatefulWidget {
-  //final Set<Marker> markers;
-  DataEntry dataEntry;
-  Maps({@required this.dataEntry});
+  final List<DataEntry> dataEntries;
+  Maps({@required this.dataEntries});
   @override
-  _MapsState createState() => _MapsState(dataEntry);
+  _MapsState createState() => _MapsState();
 }
 
 class _MapsState extends State<Maps> {
   Completer<GoogleMapController> _controller = Completer();
-  DataEntry _dataEntry;
-  static LatLng _position;
 
-  _MapsState(this._dataEntry) {
-    _position = LatLng(_dataEntry.location.item1, _dataEntry.location.item2);
+  CameraPosition _getCameraPosition() {
+    return CameraPosition(
+      target: LatLng(widget.dataEntries.first.location.item1,
+          widget.dataEntries.first.location.item2),
+      zoom: 19.151926040649414,
+    );
   }
-
-  static final CameraPosition _getCameraPosition = CameraPosition(
-    target: _position,
-    zoom: 19.151926040649414,
-  );
 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
       body: GoogleMap(
-        mapType: MapType.normal,
-        initialCameraPosition: _getCameraPosition,
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-        markers: {
-          Marker(
-            markerId: MarkerId(_dataEntry.toString()),
-            position: _position,
-            infoWindow: InfoWindow(
-              title: _dataEntry.systemName + " : " + _dataEntry.deviceId,
-              snippet: _dataEntry.fieldName,
-            ),
-            icon: BitmapDescriptor.defaultMarker,
-          )
-        },
-      ),
-      // floatingActionButton: FloatingActionButton.extended(
-      //   onPressed: _goToTheLake,
-      //   label: Text('To the lake!'),
-      //   icon: Icon(Icons.directions_boat),
-      // ),
+          mapType: MapType.normal,
+          initialCameraPosition: _getCameraPosition(),
+          onMapCreated: (GoogleMapController controller) {
+            _controller.complete(controller);
+          },
+          markers: _getMarkers()),
     );
   }
 
-  // Future<void> _goToTheLake() async {
-  //   final GoogleMapController controller = await _controller.future;
-  //   controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
-  // }
+  Set<Marker> _getMarkers() {
+    int id = 1;
+    return widget.dataEntries
+        .map((dataEntry) => Marker(
+              markerId: MarkerId((id++).toString()),
+              position:
+                  LatLng(dataEntry.location.item1, dataEntry.location.item2),
+              infoWindow: InfoWindow(
+                title: dataEntry.systemName + " : " + dataEntry.deviceId,
+                snippet: dataEntry.fieldName,
+              ),
+              icon: BitmapDescriptor.defaultMarker,
+            ))
+        .toSet();
+  }
 }
