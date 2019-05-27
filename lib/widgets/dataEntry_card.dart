@@ -71,9 +71,9 @@ class DataEntryCard extends StatelessWidget {
 
     if (currentDataEntry.location != null) {
       children3.add(Container(
-        width: 10,
+        width: 30,
         child: MaterialButton(
-          child: Icon(Icons.map),
+          child: Icon(Icons.map, size: 30),
           onPressed: () {
             _buildMapsDialog(context, currentDataEntry);
           },
