@@ -248,7 +248,7 @@ class DataEntryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMapsDialog(BuildContext context, DataEntry dataEntry) {
+  void _buildMapsDialog(BuildContext context, DataEntry dataEntry) {
     showDialog(
         context: context,
         builder: (BuildContext context) => AlertDialog(

@@ -1,6 +1,4 @@
-import 'package:iot_ui/data_model/DataEntry.dart';
 import 'package:rxdart/rxdart.dart';
-
 import 'bloc_helpers/bloc_provider.dart';
 
 class ChartsBloc implements BlocBase {

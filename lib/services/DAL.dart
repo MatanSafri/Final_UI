@@ -91,7 +91,8 @@ class DAL {
           print("${e.toString()}\n");
         }
       }
-
+      DateTime time = DateTime.fromMicrosecondsSinceEpoch(
+          (d.data["time"] as Timestamp).microsecondsSinceEpoch);
       switch (d.data["type"].toString().toLowerCase()) {
         case "text":
           {
@@ -99,7 +100,7 @@ class DAL {
                 d.data["device_id"],
                 d.data["device_type"],
                 d.data["system_name"],
-                DateTime.tryParse(d.data["time"]),
+                time,
                 DataEntry.getDataEntryType(d.data["type"]),
                 d.data["field_name"],
                 location,
@@ -112,11 +113,11 @@ class DAL {
                 d.data["device_id"],
                 d.data["device_type"],
                 d.data["system_name"],
-                DateTime.tryParse(d.data["time"]),
+                time,
                 DataEntry.getDataEntryType(d.data["type"]),
                 d.data["field_name"],
                 location,
-                double.parse(d.data["data"])));
+                d.data["data"].toDouble()));
             break;
           }
         case "image":
@@ -126,7 +127,7 @@ class DAL {
               d.data["device_id"],
               d.data["device_type"],
               d.data["system_name"],
-              DateTime.tryParse(d.data["time"]),
+              time,
               DataEntry.getDataEntryType(d.data["type"]),
               d.data["field_name"],
               location,

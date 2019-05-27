@@ -73,9 +73,6 @@ List<charts.Series<MessagesPerField, String>> _getChartsData(
         });
       }
       break;
-      defualt:
-      {}
-      break;
   }
 
   List<MessagesPerField> chartData = List<MessagesPerField>();
