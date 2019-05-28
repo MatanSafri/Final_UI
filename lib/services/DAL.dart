@@ -80,13 +80,14 @@ class DAL {
   static List<DataEntry> getSystemDataFromQuery(QuerySnapshot collection) {
     var systemsData = List<DataEntry>();
     collection.documents.forEach((d) {
-      Tuple2<double, double> location;
+      GeoPoint location;
 
       if (d.data.containsKey("location")) {
         try {
-          List<String> stringLoc = d.data["location"].split(",");
-          location = Tuple2<double, double>(
-              double.parse(stringLoc.first), double.parse(stringLoc.last));
+          // List<String> stringLoc = d.data["location"].split(",");
+          // location = Tuple2<double, double>(
+          //     double.parse(stringLoc.first), double.parse(stringLoc.last));
+          location = d.data["location"];
         } catch (e) {
           print("${e.toString()}\n");
         }

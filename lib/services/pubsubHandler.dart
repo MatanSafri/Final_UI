@@ -12,7 +12,7 @@ class PubsubHandler {
       String fieldName,
       String data) {
     var jsonFormat =
-        "{\"system\":\"$system\",\"device_id\":\"$deviceId\",\"device_type\":\"$deviceType\",\"data\":[{\"time\":\"${time.toString()}\",\"type\":\"$dataType\",\"fieldName\":\"$fieldName\",\"data\" :\"$data\"}]}";
+        "{\"system\":\"$system\",\"device_id\":\"$deviceId\",\"device_type\":\"$deviceType\",\"data\":[{\"time\":\"${time.toString()}\",\"type\":\"$dataType\",\"fieldName\":\"$fieldName\",\"data\" :\"$data\", \"location\" : {\"longitude\" :-122.08843357089895, \"latitude\" :37.43296265331170}}]}";
     print("$jsonFormat\n");
     return jsonFormat;
   }

@@ -1,6 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iot_ui/data_model/DataEntry.dart';
 import 'package:iot_ui/services/DAL.dart';
-import 'package:tuple/tuple.dart';
 
 class FileDataEntry extends DataEntry {
   String fileName;
@@ -13,7 +13,7 @@ class FileDataEntry extends DataEntry {
       DateTime time,
       DataEntryType type,
       String fieldName,
-      Tuple2<double, double> location,
+      GeoPoint location,
       this.fileName)
       : super(deviceId, deviceType, system, time, type, fieldName, location) {
     url = DAL.getFileUrlFromStorage(fileName);

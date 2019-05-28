@@ -1,5 +1,4 @@
-import 'package:iot_ui/data_model/System.dart';
-import 'package:tuple/tuple.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum DataEntryType {
   text,
@@ -17,7 +16,7 @@ class DataEntry {
   DataEntryType type;
   DateTime time;
   String fieldName;
-  Tuple2<double, double> location;
+  GeoPoint location;
 
   DataEntry(this.deviceId, this.deviceType, this.systemName, this.time,
       this.type, this.fieldName, this.location);

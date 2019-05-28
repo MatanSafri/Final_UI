@@ -1,6 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iot_ui/data_model/DataEntry.dart';
-import 'package:iot_ui/data_model/System.dart';
-import 'package:tuple/tuple.dart';
 
 class TextDataEntry extends DataEntry {
   String data;
@@ -12,7 +11,7 @@ class TextDataEntry extends DataEntry {
       DateTime time,
       DataEntryType type,
       String fieldName,
-      Tuple2<double, double> location,
+      GeoPoint location,
       this.data)
       : super(deviceId, deviceType, system, time, type, fieldName, location);
 }

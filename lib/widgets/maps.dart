@@ -16,8 +16,8 @@ class _MapsState extends State<Maps> {
 
   CameraPosition _getCameraPosition() {
     return CameraPosition(
-      target: LatLng(widget.dataEntries.first.location.item1,
-          widget.dataEntries.first.location.item2),
+      target: LatLng(widget.dataEntries.first.location.latitude,
+          widget.dataEntries.first.location.longitude),
       zoom: 19.151926040649414,
     );
   }
@@ -40,8 +40,8 @@ class _MapsState extends State<Maps> {
     return widget.dataEntries
         .map((dataEntry) => Marker(
               markerId: MarkerId((id++).toString()),
-              position:
-                  LatLng(dataEntry.location.item1, dataEntry.location.item2),
+              position: LatLng(
+                  dataEntry.location.latitude, dataEntry.location.longitude),
               infoWindow: InfoWindow(
                 title: dataEntry.systemName + " : " + dataEntry.deviceId,
                 snippet: dataEntry.fieldName,
