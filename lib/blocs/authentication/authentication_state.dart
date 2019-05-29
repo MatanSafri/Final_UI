@@ -7,14 +7,14 @@ class AuthenticationState extends BlocState {
     @required this.isLoginPage,
     this.isAuthenticating: false,
     this.errorMessage: '',
-    this.userName: '',
+    this.userId: '',
   });
 
   final bool isAuthenticated;
   final bool isAuthenticating;
   final String errorMessage;
   final bool isLoginPage;
-  final String userName;
+  final String userId;
 
   factory AuthenticationState.notAuthenticated(isLoginPage) {
     return AuthenticationState(
@@ -23,11 +23,11 @@ class AuthenticationState extends BlocState {
     );
   }
 
-  factory AuthenticationState.authenticated(String userName, bool isLoginPage) {
+  factory AuthenticationState.authenticated(String userId, bool isLoginPage) {
     return AuthenticationState(
       isAuthenticated: true,
       isLoginPage: isLoginPage,
-      userName: userName,
+      userId: userId,
     );
   }
 

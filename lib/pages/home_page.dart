@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:iot_ui/blocs/authentication/authentication_bloc.dart';
+import 'package:iot_ui/blocs/bloc_helpers/bloc_provider.dart';
 import 'package:iot_ui/blocs/data_display_bloc.dart';
 import 'package:iot_ui/data_model/DataEntry.dart';
 import 'package:iot_ui/pages/charts_page_page.dart';
@@ -23,7 +25,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _dataDisplayBloc = DataDisplayBloc();
+    AuthenticationBloc bloc = BlocProvider.of<AuthenticationBloc>(context);
+    _dataDisplayBloc = DataDisplayBloc(bloc.lastState.userId);
   }
 
   @override
@@ -34,9 +37,32 @@ class _HomePageState extends State<HomePage> {
 
   DataDisplayBloc _dataDisplayBloc;
 
+  void _buildDialog(BuildContext context, String name, List<Widget> widget) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              title: Center(child: Text(name)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: widget,
+              ),
+              actions: <Widget>[
+                FlatButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  textColor: Theme.of(context).primaryColor,
+                  child: const Text('Go back'),
+                ),
+              ],
+            ));
+  }
+
   @override
   Widget build(BuildContext context) {
     var children = <Widget>[];
+
     children.add(ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: 0.75 * MediaQuery.of(context).size.height,
@@ -47,7 +73,7 @@ class _HomePageState extends State<HomePage> {
             children: <Widget>[
               Filtering(
                 titleName: "Systems",
-                stream: _dataDisplayBloc.systemNamesStream,
+                stream: _dataDisplayBloc.userSystemNamesStream,
                 onSelectionChange: _dataDisplayBloc.onSystemSelectionChanged,
               ),
               DatesFiltering(
@@ -160,6 +186,33 @@ class _HomePageState extends State<HomePage> {
                 title: Center(child: Text('Software for IOT')),
                 leading: Container(),
                 actions: <Widget>[
+                  MaterialButton(
+                    child: Icon(Icons.system_update_alt),
+                    onPressed: () {
+                      _buildDialog(
+                          context, "Choose systems of interst", <Widget>[
+                        Filtering(
+                          titleName: "All systems",
+                          stream: _dataDisplayBloc.allSystemNamesStream,
+                          onSelectionChange:
+                              _dataDisplayBloc.onUserSystemsSelectionChanged,
+                        ),
+                        MaterialButton(
+                            shape: new RoundedRectangleBorder(
+                                borderRadius: new BorderRadius.circular(30.0)),
+                            elevation: 5.0,
+                            minWidth: 200.0,
+                            height: 42.0,
+                            color: Colors.blue,
+                            child: Text("Update systems of interst",
+                                style: TextStyle(
+                                    fontSize: 20.0, color: Colors.white)),
+                            onPressed: () async {
+                              _dataDisplayBloc.changeUserSystems();
+                            })
+                      ]);
+                    },
+                  ),
                   LogOutButton(),
                 ],
               ),

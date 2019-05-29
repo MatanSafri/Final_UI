@@ -8,81 +8,86 @@ import 'package:iot_ui/services/DAL.dart';
 import 'package:rxdart/rxdart.dart';
 
 class DataDisplayBloc extends BlocBase {
-  DataDisplayBloc() {
+  var _userId;
+
+  DataDisplayBloc(String userId) {
+    _userId = userId;
     _dataTypes.add(DataEntryType.values
         .map((type) => type.toString().split(".").last)
         .toList());
 
     // TODO: add a listener and close it
-    var systemsStream = DAL.getSystemCollection().transform(
+    var allSystemsStream = DAL.getAllSystemsCollection().transform(
         StreamTransformer<QuerySnapshot, List<System>>.fromHandlers(
             handleData: (data, sink) {
       var systems = DAL.getSystemsFromQuery(data);
-      _allSystems.clear();
-      _allSystems.addAll(systems);
       sink.add(systems);
     }));
 
-    DataEntryType.values.forEach((type) {
-      _checkStateDataTypes.putIfAbsent(
-          type.toString().split(".").last, () => BehaviorSubject<bool>());
-    });
-
-    // listen to systems stream to update devices
-    systemsStream.listen((data) {
-      _systemsDevices.sink
-          .add(_allSystems.map((sys) => sys.devices).expand((i) => i).toList());
-
-      _systemsDevicesTpyes.sink.add(
-          _allSystems.map((sys) => sys.deviceTypes).expand((i) => i).toList());
-
-      _systemsFieldsNames.add(
-          _allSystems.map((sys) => sys.fieldNames).expand((i) => i).toList());
-    });
-
-    _systems.addStream(systemsStream);
-
-    var systemsNamesStream = _systems.transform(
+    var allSystemNamesStream = allSystemsStream.transform(
         StreamTransformer<List<System>, List<String>>.fromHandlers(
             handleData: (data, sink) {
-      var systemNames = data.map((sys) => sys.systemName).toList();
-      sink.add(systemNames);
+      sink.add(data.map((system) => system.systemName).toList());
     }));
 
-    _systemsNames.addStream(systemsNamesStream);
+    var userSystemsNamesStream = DAL.getSystemsNamesOfUser(userId).transform(
+        StreamTransformer<DocumentSnapshot, List<String>>.fromHandlers(
+            handleData: (data, sink) {
+      var systemsNames = DAL.getAllSystemsOfUserFromDocument(data);
+      sink.add(systemsNames);
+    }));
+
+    var userSystemsStream =
+        Observable.combineLatest2<List<String>, List<System>, List<System>>(
+            _userSystemsNames,
+            allSystemsStream,
+            (userSystems, allSystems) => allSystems
+                .where((system) => userSystems.contains(system.systemName))
+                .toList());
+
+    // listen to systems stream to update devices
+    _userSystems.listen((data) {
+      _systemsDevices.sink
+          .add(data.map((sys) => sys.devices).expand((i) => i).toList());
+
+      _systemsDevicesTpyes.sink
+          .add(data.map((sys) => sys.deviceTypes).expand((i) => i).toList());
+
+      _systemsFieldsNames
+          .add(data.map((sys) => sys.fieldNames).expand((i) => i).toList());
+    });
+
+    _allSystemsNames.addStream(allSystemNamesStream);
+    _userSystemsNames.addStream(userSystemsNamesStream);
+    _userSystems.addStream(userSystemsStream);
   }
-  List<System> _allSystems = List<System>();
 
   @override
   void dispose() async {
-    for (var bs in _checkStateDataTypes.values) await bs?.close();
     await _currDataStreamSubscription?.cancel();
-    await _systems?.close();
-    await _systemsNames?.close();
     await _systemsDevices?.close();
     await _systemsDevicesTpyes?.close();
     await _systemsFieldsNames?.close();
     await _systemsData?.close();
     await _dataTypes?.close();
+    await _allSystemsNames?.close();
+    await _userSystemsNames.close();
+    await _userSystems?.close();
   }
 
-  final Map<String, BehaviorSubject<bool>> _checkStateDataTypes =
-      Map<String, BehaviorSubject<bool>>();
-  Map<String, Stream<bool>> get checkStateDataTypesStream =>
-      _checkStateDataTypes.map<String, Stream<bool>>(
-          (key, value) => MapEntry(key, value.stream));
-
-  final BehaviorSubject<List<System>> _systems =
-      BehaviorSubject<List<System>>();
-  Stream<List<System>> get systemStream => _systems.stream;
+  BehaviorSubject<List<System>> _userSystems = BehaviorSubject<List<System>>();
 
   final BehaviorSubject<List<String>> _dataTypes =
       BehaviorSubject<List<String>>();
   Stream<List<String>> get dataTypesStream => _dataTypes.stream;
 
-  final BehaviorSubject<List<String>> _systemsNames =
+  final BehaviorSubject<List<String>> _allSystemsNames =
       BehaviorSubject<List<String>>();
-  Stream<List<String>> get systemNamesStream => _systemsNames.stream;
+  Stream<List<String>> get allSystemNamesStream => _allSystemsNames.stream;
+
+  final BehaviorSubject<List<String>> _userSystemsNames =
+      BehaviorSubject<List<String>>();
+  Stream<List<String>> get userSystemNamesStream => _userSystemsNames.stream;
 
   final BehaviorSubject<List<String>> _systemsDevices =
       BehaviorSubject<List<String>>();
@@ -113,6 +118,15 @@ class DataDisplayBloc extends BlocBase {
   List<String> _selectedDeviceTypes = <String>[];
   DateTime _selectedStartDateTime;
   DateTime _selectedEndDateTime;
+  List<String> _systemsOfUser = <String>[];
+
+  void changeUserSystems() async {
+    await DAL.updateUserSystems(_userId, _systemsOfUser);
+  }
+
+  void onUserSystemsSelectionChanged(List<String> selected) {
+    _systemsOfUser = selected;
+  }
 
   void onDevicesSelectionChanged(List<String> selected) {
     _selectedDevices = selected;
@@ -143,8 +157,8 @@ class DataDisplayBloc extends BlocBase {
     print("onSystemSelectionChanged $selected\n");
 
     List<System> systems = selected.length == 0
-        ? _allSystems
-        : _allSystems
+        ? _userSystems.value
+        : _userSystems.value
             .where((sys) => selected.contains(sys.systemName))
             .toList();
 
@@ -175,7 +189,7 @@ class DataDisplayBloc extends BlocBase {
 
     var querySystems = _selectedSystemsNames.length > 0
         ? _selectedSystemsNames
-        : _allSystems.map((sys) => sys.systemName).toList();
+        : _userSystems.value.map((sys) => sys.systemName).toList();
 
     querySystems.forEach((systemName) {
       _dataStreams.putIfAbsent(

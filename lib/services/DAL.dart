@@ -7,11 +7,19 @@ import 'package:iot_ui/data_model/NumberDataEntry.dart';
 import 'package:iot_ui/data_model/System.dart';
 import 'package:iot_ui/data_model/TextDataEntry.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:tuple/tuple.dart';
 
 class DAL {
-  static Stream<QuerySnapshot> getSystemCollection() {
+  static Stream<QuerySnapshot> getAllSystemsCollection() {
     return Firestore.instance.collection('systems').snapshots();
+  }
+
+  static Stream<DocumentSnapshot> getSystemsNamesOfUser(String userId) {
+    return Firestore.instance.collection('users').document(userId).snapshots();
+  }
+
+  static List<String> getAllSystemsOfUserFromDocument(
+      DocumentSnapshot document) {
+    return document.data["systems"].cast<String>();
   }
 
   static List<System> getSystemsFromQuery(QuerySnapshot collection) {
@@ -27,8 +35,6 @@ class DAL {
   }
 
   static Future<dynamic> getFileUrlFromStorage(String fileName) {
-    //final Directory tempDir = Directory.systemTemp;
-    //final File file = File('${tempDir.path}/$fileName');
     final StorageReference ref = FirebaseStorage.instance.ref().child(fileName);
     return ref.getDownloadURL();
   }
@@ -84,9 +90,6 @@ class DAL {
 
       if (d.data.containsKey("location")) {
         try {
-          // List<String> stringLoc = d.data["location"].split(",");
-          // location = Tuple2<double, double>(
-          //     double.parse(stringLoc.first), double.parse(stringLoc.last));
           location = d.data["location"];
         } catch (e) {
           print("${e.toString()}\n");
@@ -136,5 +139,14 @@ class DAL {
       }
     });
     return systemsData;
+  }
+
+  static Future<void> updateUserSystems(
+      String userId, List<String> systemsOfUser) {
+    print("user id $userId systems: $systemsOfUser \n");
+    return Firestore.instance
+        .collection('users')
+        .document(userId)
+        .setData({'systems': systemsOfUser});
   }
 }

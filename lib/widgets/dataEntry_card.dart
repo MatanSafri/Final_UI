@@ -139,7 +139,7 @@ class DataEntryCard extends StatelessWidget {
           onPressed: () {
             showDialog(
                 context: context,
-                builder: (BuildContext context) => _buildImageDialog(
+                builder: (BuildContext context) => _buildDialog(
                     context, currentDataEntry.fileName, imageWidget));
           },
         ));
@@ -189,7 +189,7 @@ class DataEntryCard extends StatelessWidget {
           onPressed: () {
             showDialog(
                 context: context,
-                builder: (BuildContext context) => _buildImageDialog(
+                builder: (BuildContext context) => _buildDialog(
                     context, currentDataEntry.fileName, videoWidget));
           },
         ));
@@ -227,14 +227,13 @@ class DataEntryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImageDialog(
-      BuildContext context, String imageName, Widget imageWidget) {
+  Widget _buildDialog(BuildContext context, String name, Widget widget) {
     return AlertDialog(
-      title: Center(child: Text(imageName)),
+      title: Center(child: Text(name)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[imageWidget],
+        children: <Widget>[widget],
       ),
       actions: <Widget>[
         FlatButton(

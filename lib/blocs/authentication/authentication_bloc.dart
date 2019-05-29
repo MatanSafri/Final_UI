@@ -1,6 +1,7 @@
 import 'package:iot_ui/blocs/authentication/authentication_event.dart';
 import 'package:iot_ui/blocs/authentication/authentication_state.dart';
 import 'package:iot_ui/blocs/bloc_helpers/bloc_event_state.dart';
+import 'package:iot_ui/services/DAL.dart';
 import 'package:iot_ui/services/authentication.dart';
 import 'package:iot_ui/validators/validator_email.dart';
 import 'package:iot_ui/validators/validator_password.dart';
@@ -71,11 +72,15 @@ class AuthenticationBloc
       // Inform that we are proceeding with the authentication
       yield AuthenticationState.authenticating(currentState.isLoginPage);
 
-      // Simulate a call to the authentication server
+      // call to the authentication server
       try {
         String userId = currentState.isLoginPage
             ? await auth.signIn(event.email, event.password)
             : await auth.signUp(event.email, event.password);
+
+        // if new user creating the user systems on firestore
+        if (!currentState.isLoginPage)
+          await DAL.updateUserSystems(userId, List<String>());
         yield AuthenticationState.authenticated(
             userId, currentState.isLoginPage);
       } catch (e) {
